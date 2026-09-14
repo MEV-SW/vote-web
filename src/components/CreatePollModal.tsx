@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { PollType, VerifyField } from '../types/api';
+import type { PollKind, PollType, VerifyField } from '../types/api';
 import { AdminWarnBanner } from './AdminWarnBanner';
 import { CloseButton } from './CloseButton';
 import { VerifyFieldPicker } from './VerifyFieldPicker';
@@ -19,6 +19,8 @@ interface CreatePollModalProps {
     max_selections: number;
     poll_type: PollType;
     verify_fields: VerifyField[];
+    kind: PollKind;
+    identity_mode: 'identified' | 'secret';
     candidates: { name: string; team?: string }[];
   }) => void;
 }
@@ -30,6 +32,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
   const [closes, setCloses] = useState('');
   const [maxSelections, setMaxSelections] = useState(3);
   const [pollType, setPollType] = useState<PollType>('open');
+  const [kind, setKind] = useState<PollKind>('vote');
   const [verifyFields, setVerifyFields] = useState<VerifyField[]>(['email']);
   const [cands, setCands] = useState<CandDraft[]>([{ name: '', team: '' }, { name: '', team: '' }]);
 
@@ -49,8 +52,8 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
   const removeCand = (i: number) => setCands((prev) => prev.filter((_, j) => j !== i));
 
   const filled = cands.filter((c) => c.name.trim());
-  const valid = title.trim() && filled.length >= 2;
-  const selectionWarn = filled.length > 0 && hasSelectionMismatch(filled.length, maxSelections);
+  const valid = Boolean(title.trim() && (kind === 'form' || filled.length >= 2));
+  const selectionWarn = kind !== 'form' && filled.length > 0 && hasSelectionMismatch(filled.length, maxSelections);
 
   const submit = () => {
     if (!valid) return;
@@ -62,7 +65,9 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
       max_selections: maxSelections,
       poll_type: pollType,
       verify_fields: verifyFields,
-      candidates: filled.map((c) => ({ name: c.name.trim(), team: c.team.trim() || undefined })),
+      kind,
+      identity_mode: kind === 'form' ? 'identified' : 'secret',
+      candidates: kind === 'form' ? [] : filled.map((c) => ({ name: c.name.trim(), team: c.team.trim() || undefined })),
     });
   };
 
@@ -72,14 +77,21 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
         <div className="cp-head">
           <div>
             <span className="eyebrow">New poll</span>
-            <h2>새 투표 만들기</h2>
+            <h2>{kind === 'form' ? '새 폼 만들기' : '새 투표 만들기'}</h2>
           </div>
           <CloseButton variant="surface" onClick={onClose} />
         </div>
         <div className="cp-body">
           <label className="cp-field">
-            <span className="cp-label">투표 제목 <i>*</i></span>
-            <input className="cp-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="예: 2026 사내 동아리 이름 공모" autoFocus />
+            <span className="cp-label">종류</span>
+            <select className="cp-input" value={kind} onChange={(e) => setKind(e.target.value as PollKind)}>
+              <option value="vote">순위 투표</option>
+              <option value="form">인터뷰 폼</option>
+            </select>
+          </label>
+          <label className="cp-field">
+            <span className="cp-label">{kind === 'form' ? '폼 제목' : '투표 제목'} <i>*</i></span>
+            <input className="cp-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === 'form' ? '예: 2026 프로젝트 인터뷰' : '예: 2026 사내 동아리 이름 공모'} autoFocus />
           </label>
           <div className="cp-row2">
             <label className="cp-field">
@@ -96,8 +108,8 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
           <label className="cp-field">
             <span className="cp-label">투표 타입</span>
             <select className="cp-input" value={pollType} onChange={(e) => setPollType(e.target.value as PollType)}>
-              <option value="open">불특정 — 누구나 QR로 투표</option>
-              <option value="restricted">특정 — 등록된 대상자만 투표</option>
+              <option value="open">불특정 — 누구나 QR로 {kind === 'form' ? '제출' : '투표'}</option>
+              <option value="restricted">특정 — 등록된 대상자만 {kind === 'form' ? '제출' : '투표'}</option>
             </select>
           </label>
           {pollType === 'restricted' && (
@@ -108,6 +120,9 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
               </p>
             </>
           )}
+          {kind === 'form' && <p className="cp-hint">인터뷰 폼은 기명입니다. 누가 답했는지를 남깁니다.</p>}
+          {kind !== 'form' && (
+            <>
           <label className="cp-field">
             <span className="cp-label">선택 가능 인원</span>
             <select className="cp-input" value={maxSelections} onChange={(e) => setMaxSelections(Number(e.target.value))}>
@@ -119,10 +134,13 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
           {selectionWarn && (
             <AdminWarnBanner message={selectionMismatchMessage(filled.length, maxSelections)} />
           )}
+            </>
+          )}
           <label className="cp-field">
             <span className="cp-label">안내 문구</span>
             <textarea className="cp-input cp-area" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="투표자에게 보여줄 안내를 적어주세요. (선택)" rows={2} />
           </label>
+          {kind !== 'form' && (
           <div className="cp-field">
             <span className="cp-label">후보 <i>*</i> <em>최소 2명</em></span>
             <p className="cp-hint">
@@ -140,6 +158,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
             </div>
             <button type="button" className="cp-add" onClick={addCand}>＋ 후보 추가</button>
           </div>
+          )}
           <div className="cp-note">
             <span aria-hidden>ℹ️</span> 만들면 <b>준비중</b> 상태로 생성돼요. 목록에서 <b>시작</b>을 누르면 QR 링크로 투표가 열립니다.
           </div>
@@ -147,7 +166,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
         <div className="cp-foot">
           <button type="button" className="btn btn-ghost" onClick={onClose}>취소</button>
           <button type="button" className="btn btn-primary" disabled={!valid} onClick={submit}>
-            투표 만들기{filled.length ? ` · 후보 ${filled.length}명` : ''}
+            {kind === 'form' ? '폼 만들기' : `투표 만들기${filled.length ? ` · 후보 ${filled.length}명` : ''}`}
           </button>
         </div>
       </div>

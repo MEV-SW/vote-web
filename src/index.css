@@ -5,6 +5,7 @@
 @import './styles/complete.css';
 @import './styles/admin.css';
 @import './styles/manage.css';
+@import './styles/form.css';
 
 .login-page {
   min-height: 100vh;

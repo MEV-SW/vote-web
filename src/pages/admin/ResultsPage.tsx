@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getPollAdmin, getResults, getResultsCsvUrl, resetPollVotes, updatePoll } from '../../api/admin';
+import { getPollAdmin, getResults, getResultsCsvUrl, getFormResults, getFormResultsCsvUrl, resetPollVotes, updatePoll } from '../../api/admin';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { FormResultsView } from '../../components/FormResultsView';
 import { Medal } from '../../components/Medal';
 import { Placeholder } from '../../components/Placeholder';
 import { QrCodeModal } from '../../components/QrCodeModal';
 import { QrOpenButton } from '../../components/QrOpenButton';
 import { getToken } from '../../lib/auth';
 import { rankNumbers } from '../../lib/rankSlots';
-import type { Poll, ResultRow, ResultsOut } from '../../types/api';
+import type { FormResultsOut, Poll, ResultRow, ResultsOut } from '../../types/api';
 import { AdminWarnBanner } from '../../components/AdminWarnBanner';
 import { hasSelectionMismatch, selectionMismatchMessage } from '../../lib/pollWarnings';
 import { EligibleVotersPanel } from '../../components/EligibleVotersPanel';
@@ -27,14 +28,21 @@ export function ResultsPage() {
   const token = getToken()!;
   const [poll, setPoll] = useState<Poll | null>(null);
   const [results, setResults] = useState<ResultsOut | null>(null);
+  const [formResults, setFormResults] = useState<FormResultsOut | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   const load = useCallback(async () => {
-    const [p, r] = await Promise.all([getPollAdmin(token, id), getResults(token, id)]);
+    const p = await getPollAdmin(token, id);
     setPoll(p);
-    setResults(r);
+    if (p.kind === 'form') {
+      setFormResults(await getFormResults(token, id));
+      setResults(null);
+    } else {
+      setResults(await getResults(token, id));
+      setFormResults(null);
+    }
   }, [token, id]);
 
   useEffect(() => { void load(); }, [load]);
@@ -45,7 +53,61 @@ export function ResultsPage() {
     voters_updated: load,
   }, token);
 
-  if (!poll || !results) return <div className="admin-page">불러오는 중…</div>;
+  const doReset = async () => {
+    setResetting(true);
+    try {
+      await resetPollVotes(token, id);
+      setShowReset(false);
+      await load();
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  if (!poll || (poll.kind === 'form' ? !formResults : !results)) return <div className="admin-page">불러오는 중…</div>;
+
+  if (poll.kind === 'form' && formResults) {
+    const downloadCsv = async () => {
+      const res = await fetch(getFormResultsCsvUrl(id), { headers: { Authorization: `Bearer ${token}` } });
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `form-${id}-results.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+    return (
+      <div className="admin-page">
+        <header className="admin-hero">
+          <nav className="admin-top-nav" aria-label="페이지 이동">
+            <Link to="/admin" className="eyebrow admin-top-nav-link">← 관리</Link>
+          </nav>
+          <div className="admin-toolbar">
+            <h1 className="admin-title">{poll.title}</h1>
+            <div className="admin-toolbar-actions">
+              <Link to={`/polls/${id}/results`} className="btn btn-ghost btn-sm">공개 결과</Link>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => void downloadCsv()}>CSV</button>
+              <button type="button" className="btn btn-danger-outline btn-sm" onClick={() => setShowReset(true)}>리셋</button>
+            </div>
+          </div>
+        </header>
+        {showReset && (
+          <ConfirmDialog
+            title="응답을 리셋할까요?"
+            message={`「${poll.title}」의 응답 ${formResults.total_responses.toLocaleString()}건이 삭제됩니다.`}
+            confirmLabel="예, 리셋"
+            cancelLabel="아니오"
+            danger
+            onConfirm={doReset}
+            onCancel={() => setShowReset(false)}
+          />
+        )}
+        <FormResultsView results={formResults} showIndividual />
+      </div>
+    );
+  }
+
+  if (!results) return <div className="admin-page">불러오는 중…</div>;
 
   const rows = results.rows;
   const maxSel = poll.max_selections ?? 3;
@@ -65,17 +127,6 @@ export function ResultsPage() {
     const next = active ? 'closed' : 'active';
     await updatePoll(token, id, { status: next });
     await load();
-  };
-
-  const doReset = async () => {
-    setResetting(true);
-    try {
-      await resetPollVotes(token, id);
-      setShowReset(false);
-      await load();
-    } finally {
-      setResetting(false);
-    }
   };
 
   const downloadCsv = async () => {

@@ -5,6 +5,7 @@ import { CandidateCard } from '../components/CandidateCard';
 import { CountdownPill } from '../components/CountdownPill';
 import { Lightbox } from '../components/Lightbox';
 import { VoteVerifyGate } from '../components/VoteVerifyGate';
+import { FormPage } from './FormPage';
 import { Medal } from '../components/Medal';
 import { Placeholder } from '../components/Placeholder';
 import { getFingerprint } from '../lib/fingerprint';
@@ -185,6 +186,7 @@ export function VotePage() {
 
   if (loading) return <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>불러오는 중…</div>;
   if (error || !poll) return <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>{error || '투표를 찾을 수 없습니다.'}</div>;
+  if ((poll.kind ?? 'vote') === 'form') return <FormPage />;
 
   const maxSel = poll.max_selections ?? 3;
   const intro = pollIntroText(poll);

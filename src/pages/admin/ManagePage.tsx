@@ -140,7 +140,7 @@ export function ManagePage() {
               const created = new Date(p.created_at).toLocaleDateString('ko-KR');
               const closes = p.closes_at ? new Date(p.closes_at).toLocaleDateString('ko-KR') : '미정';
               const maxSel = p.max_selections ?? 3;
-              const selectionWarn = hasSelectionMismatch(p.candidates, maxSel);
+              const selectionWarn = p.kind !== 'form' && hasSelectionMismatch(p.candidates, maxSel);
               return (
                 <tr key={p.id} className={p.status === 'closed' ? 'is-closed' : undefined}>
                   <td data-label="투표">
@@ -150,7 +150,7 @@ export function ManagePage() {
                         <Link to={`/polls/${p.id}/results`} className="pt-title pt-title-link">
                           {p.title}
                         </Link>
-                        <div className="pt-meta">#{p.id} · 생성 {created} · 마감 {closes}</div>
+                        <div className="pt-meta">#{p.id} · {p.kind === 'form' ? '폼' : '투표'} · 생성 {created} · 마감 {closes}</div>
                         {selectionWarn && (
                           <div className="pt-warn" title={selectionMismatchMessage(p.candidates, maxSel)}>
                             ⚠ 선택 {maxSel}명 · 후보 {p.candidates}명
@@ -167,7 +167,7 @@ export function ManagePage() {
                   <td data-label="상태">
                     <span className={`pill st-pill ${sm.cls}`}>{sm.dot && <span className="dot" />}{sm.label}</span>
                   </td>
-                  <td data-label="후보"><b>{p.candidates}</b><span>명</span></td>
+                  <td data-label="후보"><b>{p.kind === 'form' ? (p.questions ?? 0) : p.candidates}</b><span>{p.kind === 'form' ? '문항' : '명'}</span></td>
                   <td data-label="참여">
                     <div className="pt-part-inner">
                       <div><b>{p.ballots.toLocaleString()}</b><span>표 · {rate}%</span></div>
@@ -255,6 +255,8 @@ export function ManagePage() {
                 max_selections: draft.max_selections,
                 poll_type: draft.poll_type,
                 verify_fields: draft.poll_type === 'restricted' ? draft.verify_fields : undefined,
+                kind: draft.kind,
+                identity_mode: draft.identity_mode,
                 candidates: draft.candidates,
               });
               setCreating(false);

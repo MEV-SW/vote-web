@@ -9,7 +9,29 @@ export interface Candidate {
 }
 
 export type PollType = 'open' | 'restricted';
+export type PollKind = 'vote' | 'form';
+export type VerifyMethod = 'pin' | 'sso';
+export type IdentityMode = 'identified' | 'secret';
 export type VerifyField = 'name' | 'email' | 'phone';
+export type QuestionType = 'short_text' | 'long_text' | 'single_choice' | 'multi_choice' | 'scale';
+
+export interface QuestionOption {
+  id: number;
+  label: string;
+  order_num: number;
+}
+
+export interface Question {
+  id: number;
+  title: string;
+  help_text?: string | null;
+  type: QuestionType;
+  required: boolean;
+  order_num: number;
+  scale_min: number;
+  scale_max: number;
+  options: QuestionOption[];
+}
 
 export interface PollPublic {
   id: number;
@@ -20,22 +42,17 @@ export interface PollPublic {
   status: string;
   closes_at?: string | null;
   max_selections: number;
+  kind: PollKind;
+  poll_type: PollType;
+  verify_method: VerifyMethod;
+  identity_mode: IdentityMode;
   candidates: Candidate[];
+  questions: Question[];
 }
 
-export interface Poll {
-  id: number;
-  title: string;
-  subtitle?: string | null;
-  description?: string | null;
-  category: string;
-  status: string;
-  closes_at?: string | null;
+export interface Poll extends PollPublic {
   eligible_count: number;
-  max_selections: number;
-  poll_type: PollType;
   verify_fields: VerifyField[];
-  candidates: Candidate[];
 }
 
 export interface EligibleVoter {
@@ -50,10 +67,12 @@ export interface EligibleVoter {
 export interface VerifyVoterResponse {
   verified: boolean;
   voter_token: string | null;
+  ballot_token?: string | null;
   voter_name: string;
   already_voted?: boolean;
   pin_required: boolean;
   pin_setup: boolean;
+  identity_mode?: IdentityMode;
 }
 
 export interface VoteEntry {
@@ -61,9 +80,17 @@ export interface VoteEntry {
   candidate_id: number;
 }
 
+export interface AnswerSubmit {
+  question_id: number;
+  text_value?: string | null;
+  scale_value?: number | null;
+  option_ids?: number[];
+}
+
 export interface CheckResponse {
   voted: boolean;
   votes?: VoteEntry[] | null;
+  answers?: AnswerSubmit[] | null;
 }
 
 export interface PollPublicListItem {
@@ -72,8 +99,11 @@ export interface PollPublicListItem {
   category: string;
   status: string;
   candidates: number;
+  questions?: number;
   max_selections: number;
   poll_type: PollType;
+  kind?: PollKind;
+  identity_mode?: IdentityMode;
   ballots: number;
   closes_at?: string | null;
   desc?: string | null;
@@ -85,8 +115,12 @@ export interface PollListItem {
   category: string;
   status: string;
   candidates: number;
+  questions?: number;
   max_selections: number;
   poll_type: PollType;
+  kind?: PollKind;
+  verify_method?: VerifyMethod;
+  identity_mode?: IdentityMode;
   ballots: number;
   eligible: number;
   created_at: string;
@@ -115,6 +149,49 @@ export interface ResultsOut {
   rows: ResultRow[];
 }
 
+export interface FormOptionCount {
+  option_id: number;
+  label: string;
+  count: number;
+}
+
+export interface FormQuestionSummary {
+  question_id: number;
+  title: string;
+  type: QuestionType;
+  required: boolean;
+  response_count: number;
+  option_counts: FormOptionCount[];
+  scale_avg?: number | null;
+  scale_counts: Record<number, number>;
+  texts: string[];
+}
+
+export interface FormAnswerOut {
+  question_id: number;
+  title: string;
+  type: QuestionType;
+  text_value?: string | null;
+  scale_value?: number | null;
+  option_labels: string[];
+}
+
+export interface FormResponseOut {
+  ballot_id: number;
+  submitted_at: string;
+  voter_name?: string | null;
+  voter_email?: string | null;
+  answers: FormAnswerOut[];
+}
+
+export interface FormResultsOut {
+  total_responses: number;
+  eligible_count: number;
+  participation_rate: number;
+  questions: FormQuestionSummary[];
+  responses: FormResponseOut[];
+}
+
 export interface CandidateDraft {
   name: string;
   team?: string;
@@ -131,6 +208,9 @@ export interface PollCreatePayload {
   max_selections?: number;
   poll_type?: PollType;
   verify_fields?: VerifyField[];
+  kind?: PollKind;
+  verify_method?: VerifyMethod;
+  identity_mode?: IdentityMode;
   candidates: CandidateDraft[];
 }
 
@@ -138,4 +218,14 @@ export interface EligibleVoterCreate {
   name?: string;
   email?: string;
   phone?: string;
+}
+
+export interface QuestionCreatePayload {
+  title: string;
+  help_text?: string;
+  type: QuestionType;
+  required?: boolean;
+  scale_min?: number;
+  scale_max?: number;
+  options?: { label: string }[];
 }

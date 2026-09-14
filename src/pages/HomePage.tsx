@@ -27,6 +27,7 @@ function PollCard({ poll }: { poll: PollPublicListItem }) {
     <Link to={href} className={`home-poll-card${active ? ' is-active' : ''}`}>
       <div className="home-poll-card-top">
         <span className="home-poll-cat" data-cat={poll.category}>{poll.category}</span>
+        <span className="pill">{poll.kind === 'form' ? '폼' : '투표'}</span>
         <span className={`pill${active ? ' pill-live' : ' pill-closed'}`}>
           {active && <span className="dot" />}
           {active ? '진행중' : '종료'}
@@ -36,13 +37,15 @@ function PollCard({ poll }: { poll: PollPublicListItem }) {
       {poll.desc && <p className="home-poll-desc">{poll.desc}</p>}
       <dl className="home-poll-meta">
         <div>
-          <dt>후보</dt>
-          <dd>{poll.candidates}명</dd>
+          <dt>{poll.kind === 'form' ? '문항' : '후보'}</dt>
+          <dd>{poll.kind === 'form' ? `${poll.questions ?? 0}개` : `${poll.candidates}명`}</dd>
         </div>
+        {poll.kind !== 'form' && (
         <div>
           <dt>선택</dt>
           <dd>{poll.max_selections}순위</dd>
         </div>
+        )}
         <div>
           <dt>참여</dt>
           <dd>{poll.ballots.toLocaleString()}표</dd>
@@ -54,7 +57,7 @@ function PollCard({ poll }: { poll: PollPublicListItem }) {
       </dl>
       <div className="home-poll-foot">
         <span className="home-poll-closes">{formatCloses(poll.closes_at)}</span>
-        <span className="home-poll-cta">{active ? '투표하기 →' : '결과 보기 →'}</span>
+        <span className="home-poll-cta">{active ? (poll.kind === 'form' ? '작성하기 →' : '투표하기 →') : '결과 보기 →'}</span>
       </div>
     </Link>
   );
