@@ -1,6 +1,8 @@
 import { apiFetch } from './client';
 import type {
+  AnswerSubmit,
   CheckResponse,
+  FormResultsOut,
   Poll,
   PollPublic,
   PollPublicListItem,
@@ -55,4 +57,24 @@ export function submitVote(
       voter_token: voterToken ?? undefined,
     }),
   });
+}
+
+export function submitFormResponse(
+  pollId: number,
+  fingerprint: string,
+  answers: AnswerSubmit[],
+  voterToken?: string | null,
+) {
+  return apiFetch<{ ok: boolean }>(`/polls/${pollId}/responses`, {
+    method: 'POST',
+    body: JSON.stringify({
+      fingerprint,
+      answers,
+      voter_token: voterToken ?? undefined,
+    }),
+  });
+}
+
+export function getPublicFormResults(pollId: number) {
+  return apiFetch<FormResultsOut>(`/polls/${pollId}/form-results`);
 }

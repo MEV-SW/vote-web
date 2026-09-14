@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getPollPublic, getPublicResults } from '../api/polls';
+import { getPollPublic, getPublicFormResults, getPublicResults } from '../api/polls';
+import { FormResultsView } from '../components/FormResultsView';
 import { ResultsRevealSection } from '../components/ResultsRevealSection';
 import { ApiError } from '../api/client';
 import { pollIntroText } from '../lib/pollIntro';
 import { usePollEvents } from '../lib/usePollEvents';
-import type { PollPublic, ResultsOut } from '../types/api';
+import type { FormResultsOut, PollPublic, ResultsOut } from '../types/api';
 
 const revealKey = (pollId: number) => `public_results_revealed_${pollId}`;
 
@@ -14,6 +15,7 @@ export function PublicResultsPage() {
   const id = Number(pollId);
   const [poll, setPoll] = useState<PollPublic | null>(null);
   const [results, setResults] = useState<ResultsOut | null>(null);
+  const [formResults, setFormResults] = useState<FormResultsOut | null>(null);
   const [revealed, setRevealed] = useState(() => sessionStorage.getItem(revealKey(id)) === '1');
   const [loading, setLoading] = useState(true);
   const [loadingResults, setLoadingResults] = useState(false);
@@ -45,7 +47,9 @@ export function PublicResultsPage() {
         const p = await getPollPublic(id);
         if (cancelled) return;
         setPoll(p);
-        if (p.status === 'closed' && sessionStorage.getItem(revealKey(id)) === '1') {
+        if (p.status === 'closed' && p.kind === 'form') {
+          setFormResults(await getPublicFormResults(id));
+        } else if (p.status === 'closed' && sessionStorage.getItem(revealKey(id)) === '1') {
           setResults(await getPublicResults(id));
         }
       } catch (e) {
@@ -116,7 +120,11 @@ export function PublicResultsPage() {
 
       {error && <p className="public-results-error">{error}</p>}
 
-      {results && revealed && (
+      {poll.kind === 'form' && formResults && closed && (
+        <FormResultsView results={formResults} showIndividual={false} />
+      )}
+
+      {poll.kind !== 'form' && results && revealed && (
         <div className="admin-stats admin-stats--public">
           <div className="stat-card">
             <div className="stat-card-label">
@@ -142,6 +150,7 @@ export function PublicResultsPage() {
         </div>
       )}
 
+      {poll.kind !== 'form' && (
       <ResultsRevealSection
         pollId={id}
         poll={poll}
@@ -152,6 +161,7 @@ export function PublicResultsPage() {
         onRevealed={() => setRevealed(true)}
         storageKey={revealKey(id)}
       />
+      )}
     </div>
   );
 }

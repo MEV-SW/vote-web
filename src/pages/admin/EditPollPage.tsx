@@ -25,6 +25,7 @@ import { ApiError } from '../../api/client';
 import { AdminWarnBanner } from '../../components/AdminWarnBanner';
 import { EligibleVotersPanel } from '../../components/EligibleVotersPanel';
 import { hasSelectionMismatch, selectionMismatchMessage } from '../../lib/pollWarnings';
+import { QuestionEditor } from '../../components/QuestionEditor';
 
 const STATUS_LABEL: Record<string, string> = {
   active: '진행중',
@@ -227,7 +228,7 @@ export function EditPollPage() {
   const statusCls = poll.status === 'active' ? 'st-active' : poll.status === 'draft' ? 'st-draft' : 'st-closed';
   const mediaBusy = uploadingId !== null || figmaSavingId !== null;
   const maxSel = poll.max_selections ?? 3;
-  const selectionWarn = hasSelectionMismatch(poll.candidates.length, maxSel);
+  const selectionWarn = poll.kind !== 'form' && hasSelectionMismatch(poll.candidates.length, maxSel);
 
   return (
     <div className="manage-page edit-page">
@@ -239,13 +240,14 @@ export function EditPollPage() {
         </nav>
         <div className="edit-toolbar">
           <div className="edit-toolbar-title">
-            <h1 className="manage-title">투표 수정</h1>
+            <h1 className="manage-title">{poll.kind === 'form' ? '폼 수정' : '투표 수정'}</h1>
             <span className={`pill st-pill ${statusCls}`}>
               {poll.status === 'active' && <span className="dot" />}
               {STATUS_LABEL[poll.status] ?? poll.status}
             </span>
             <span className="edit-toolbar-meta">
-              Poll #{poll.id} · {poll.poll_type === 'restricted' ? '특정' : '불특정'} · 후보 {poll.candidates.length}명
+              Poll #{poll.id} · {poll.kind === 'form' ? '폼' : '투표'} · {poll.poll_type === 'restricted' ? '특정' : '불특정'}
+              {poll.kind === 'form' ? ` · 문항 ${poll.questions?.length ?? 0}개` : ` · 후보 ${poll.candidates.length}명`}
             </span>
           </div>
           <div className="edit-toolbar-actions">
@@ -355,6 +357,9 @@ export function EditPollPage() {
         </section>
       )}
 
+      {poll.kind === 'form' ? (
+        <QuestionEditor poll={poll} token={token} onChange={load} onMessage={setMsg} />
+      ) : (
       <section className="edit-card">
         <div className="edit-card-head">
           <h2 className="edit-card-title">후보 목록</h2>
@@ -477,6 +482,7 @@ export function EditPollPage() {
           </div>
         </div>
       </section>
+      )}
 
       {showResultsMode && (
         <ResultsModeDialog

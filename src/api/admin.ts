@@ -3,9 +3,13 @@ import type {
   Candidate,
   EligibleVoter,
   EligibleVoterCreate,
+  FormResultsOut,
   Poll,
   PollCreatePayload,
   PollListItem,
+  Question,
+  QuestionCreatePayload,
+  QuestionOption,
   ResultsOut,
 } from '../types/api';
 
@@ -119,6 +123,65 @@ export function resetPollVotes(token: string, pollId: number) {
 
 export function getResultsCsvUrl(pollId: number) {
   return `/api/admin/polls/${pollId}/results/csv`;
+}
+
+export function getFormResults(token: string, pollId: number) {
+  return apiFetch<FormResultsOut>(`/admin/polls/${pollId}/form-results`, {}, token);
+}
+
+export function getFormResultsCsvUrl(pollId: number) {
+  return `/api/admin/polls/${pollId}/form-results/csv`;
+}
+
+export function addQuestion(token: string, pollId: number, payload: QuestionCreatePayload) {
+  return apiFetch<Question>(`/admin/polls/${pollId}/questions`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function updateQuestion(
+  token: string,
+  pollId: number,
+  questionId: number,
+  payload: Partial<QuestionCreatePayload>,
+) {
+  return apiFetch<Question>(`/admin/polls/${pollId}/questions/${questionId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function deleteQuestion(token: string, pollId: number, questionId: number) {
+  return apiFetch<void>(`/admin/polls/${pollId}/questions/${questionId}`, {
+    method: 'DELETE',
+  }, token);
+}
+
+export function addQuestionOption(token: string, pollId: number, questionId: number, label: string) {
+  return apiFetch<QuestionOption>(`/admin/polls/${pollId}/questions/${questionId}/options`, {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  }, token);
+}
+
+export function updateQuestionOption(
+  token: string,
+  pollId: number,
+  questionId: number,
+  optionId: number,
+  payload: { label?: string; order_num?: number },
+) {
+  return apiFetch<QuestionOption>(`/admin/polls/${pollId}/questions/${questionId}/options/${optionId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function deleteQuestionOption(token: string, pollId: number, questionId: number, optionId: number) {
+  return apiFetch<void>(`/admin/polls/${pollId}/questions/${questionId}/options/${optionId}`, {
+    method: 'DELETE',
+  }, token);
 }
 
 async function uploadImageLocal(token: string, file: File) {
