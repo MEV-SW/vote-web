@@ -8,6 +8,7 @@ import { VoteVerifyGate } from '../components/VoteVerifyGate';
 import { FormPage } from './FormPage';
 import { Medal } from '../components/Medal';
 import { Placeholder } from '../components/Placeholder';
+import { getBallotToken, setBallotToken } from '../lib/ballotToken';
 import { getFingerprint } from '../lib/fingerprint';
 import { pollIntroText } from '../lib/pollIntro';
 import { getVoterName, getVoterToken, setVoterSession } from '../lib/voterToken';
@@ -44,6 +45,7 @@ export function VotePage() {
   const [zoomId, setZoomId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [voterToken, setVoterToken] = useState<string | null>(null);
+  const [ballotToken, setBallotTokenState] = useState<string | null>(null);
   const [voterName, setVoterName] = useState('');
   const [verified, setVerified] = useState(false);
   const [ballotSheetOpen, setBallotSheetOpen] = useState(false);
@@ -54,7 +56,8 @@ export function VotePage() {
   const sheetDragging = useRef(false);
 
   const isRestricted = (poll?.poll_type ?? 'open') === 'restricted';
-  const ballotEditable = isRestricted && poll?.status === 'active' && voted;
+  const isSecret = (poll?.identity_mode ?? 'secret') === 'secret' && isRestricted;
+  const ballotEditable = isRestricted && poll?.status === 'active' && voted && (!isSecret || Boolean(ballotToken));
   const ballotLocked = voted && !ballotEditable;
 
   const applyCheck = useCallback((check: Awaited<ReturnType<typeof checkVote>>, maxSel: number) => {
@@ -86,16 +89,24 @@ export function VotePage() {
         const pollData = await getPoll(id);
         if (cancelled) return;
         setPoll(pollData);
+        if ((pollData.kind ?? 'vote') === 'form') {
+          return;
+        }
         const maxSel = pollData.max_selections ?? 3;
-        const isRestricted = (pollData.poll_type ?? 'open') === 'restricted';
-        const token = isRestricted ? getVoterToken(id) : null;
-        if (isRestricted && token) {
+        const isRestrictedPoll = (pollData.poll_type ?? 'open') === 'restricted';
+        const storedBallot = getBallotToken(id);
+        const token = isRestrictedPoll ? getVoterToken(id) : null;
+        if (storedBallot) {
+          setBallotTokenState(storedBallot);
+          setVerified(true);
+        }
+        if (isRestrictedPoll && token) {
           setVoterToken(token);
           setVoterName(getVoterName(id) || '');
           setVerified(true);
         }
-        if (!isRestricted || token) {
-          const check = await checkVote(id, fp, token);
+        if (!isRestrictedPoll || token || storedBallot) {
+          const check = await checkVote(id, fp, token, storedBallot);
           if (cancelled) return;
           applyCheck(check, maxSel);
         } else {
@@ -110,14 +121,24 @@ export function VotePage() {
     return () => { cancelled = true; };
   }, [id, applyCheck]);
 
-  const onVerified = async (token: string, name: string) => {
-    setVoterSession(id, token, name);
-    setVoterToken(token);
+  const onVerified = async (token: string, name: string, nextBallot?: string | null) => {
+    if (nextBallot) {
+      setBallotToken(id, nextBallot);
+      setBallotTokenState(nextBallot);
+    }
+    if (token) {
+      setVoterSession(id, token, name);
+      setVoterToken(token);
+    }
     setVoterName(name);
     setVerified(true);
+    if (!nextBallot && !token) {
+      setVoted(true);
+      return;
+    }
     if (!poll) return;
     const maxSel = poll.max_selections ?? 3;
-    const check = await checkVote(id, fpRef.current, token);
+    const check = await checkVote(id, fpRef.current, token || null, nextBallot || getBallotToken(id));
     applyCheck(check, maxSel);
   };
 
@@ -170,7 +191,13 @@ export function VotePage() {
     setSubmitting(true);
     try {
       const votes = slotsToVotes(rankSlots);
-      await submitVote(id, fpRef.current, votes, (poll.poll_type ?? 'open') === 'restricted' ? voterToken : null);
+      await submitVote(
+        id,
+        fpRef.current,
+        votes,
+        isSecret ? null : ((poll.poll_type ?? 'open') === 'restricted' ? voterToken : null),
+        isSecret ? ballotToken : null,
+      );
       const snapshot = votes
         .sort((a, b) => a.rank - b.rank)
         .map((v) => poll.candidates.find((c) => c.id === v.candidate_id)!)
@@ -185,8 +212,8 @@ export function VotePage() {
   };
 
   if (loading) return <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>불러오는 중…</div>;
+  if (poll && (poll.kind ?? 'vote') === 'form') return <FormPage />;
   if (error || !poll) return <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>{error || '투표를 찾을 수 없습니다.'}</div>;
-  if ((poll.kind ?? 'vote') === 'form') return <FormPage />;
 
   const maxSel = poll.max_selections ?? 3;
   const intro = pollIntroText(poll);
@@ -240,7 +267,7 @@ export function VotePage() {
         <VoteVerifyGate pollId={id} verifyFields={verifyFields} onVerified={onVerified} />
       )}
 
-      {isRestricted && verified && voterName && !ballotLocked && (
+      {isRestricted && verified && voterName && !isSecret && !ballotLocked && (
         <div className="vote-verified-banner">
           <span className="vote-verified-icon" aria-hidden>✓</span>
           <span><strong>{voterName}</strong>님으로 확인되었습니다. 아래에서 투표해주세요.</span>

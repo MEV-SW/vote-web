@@ -14,7 +14,7 @@ const FIELD_LABEL: Record<VerifyField, string> = {
 interface VoteVerifyGateProps {
   pollId: number;
   verifyFields: VerifyField[];
-  onVerified: (token: string, name: string) => void;
+  onVerified: (token: string, name: string, ballotToken?: string | null) => void;
 }
 
 type Step = 'identity' | 'pin';
@@ -37,6 +37,14 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
   };
 
   const finishVerify = (res: Awaited<ReturnType<typeof verifyVoter>>) => {
+    if (res.ballot_token) {
+      onVerified('', res.voter_name, res.ballot_token);
+      return;
+    }
+    if (res.verified && res.already_voted && !res.voter_token) {
+      onVerified('', res.voter_name, null);
+      return;
+    }
     if (!res.verified || !res.voter_token) {
       setError('인증에 실패했습니다. 다시 시도해주세요.');
       return;

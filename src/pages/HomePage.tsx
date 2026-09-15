@@ -28,6 +28,7 @@ function PollCard({ poll }: { poll: PollPublicListItem }) {
       <div className="home-poll-card-top">
         <span className="home-poll-cat" data-cat={poll.category}>{poll.category}</span>
         <span className="pill">{poll.kind === 'form' ? '폼' : '투표'}</span>
+        {poll.identity_mode === 'secret' && poll.poll_type === 'restricted' && <span className="pill">무기명</span>}
         <span className={`pill${active ? ' pill-live' : ' pill-closed'}`}>
           {active && <span className="dot" />}
           {active ? '진행중' : '종료'}

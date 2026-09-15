@@ -33,6 +33,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
   const [maxSelections, setMaxSelections] = useState(3);
   const [pollType, setPollType] = useState<PollType>('open');
   const [kind, setKind] = useState<PollKind>('vote');
+  const [identityMode, setIdentityMode] = useState<'identified' | 'secret'>('identified');
   const [verifyFields, setVerifyFields] = useState<VerifyField[]>(['email']);
   const [cands, setCands] = useState<CandDraft[]>([{ name: '', team: '' }, { name: '', team: '' }]);
 
@@ -66,7 +67,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
       poll_type: pollType,
       verify_fields: verifyFields,
       kind,
-      identity_mode: kind === 'form' ? 'identified' : 'secret',
+      identity_mode: kind === 'form' || pollType === 'open' ? (kind === 'form' ? 'identified' : 'secret') : identityMode,
       candidates: kind === 'form' ? [] : filled.map((c) => ({ name: c.name.trim(), team: c.team.trim() || undefined })),
     });
   };
@@ -114,6 +115,15 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
           </label>
           {pollType === 'restricted' && (
             <>
+              {kind === 'vote' && (
+                <label className="cp-field">
+                  <span className="cp-label">기명 / 무기명</span>
+                  <select className="cp-input" value={identityMode} onChange={(e) => setIdentityMode(e.target.value as 'identified' | 'secret')}>
+                    <option value="identified">기명 — 누가 뽑았는지 관리자가 볼 수 있음</option>
+                    <option value="secret">무기명 — 자격만 확인하고 선택과 연결하지 않음</option>
+                  </select>
+                </label>
+              )}
               <VerifyFieldPicker value={verifyFields} onChange={setVerifyFields} />
               <p className="cp-hint">
                 특정 투표는 생성 후 <b>수정</b> 화면에서 선택한 인증 항목 기준으로 대상자를 등록해야 합니다.
