@@ -37,9 +37,15 @@ export function verifyVoter(
   });
 }
 
-export function checkVote(pollId: number, fingerprint: string, voterToken?: string | null) {
+export function checkVote(
+  pollId: number,
+  fingerprint: string,
+  voterToken?: string | null,
+  ballotToken?: string | null,
+) {
   const params = new URLSearchParams({ fingerprint });
   if (voterToken) params.set('voter_token', voterToken);
+  if (ballotToken) params.set('ballot_token', ballotToken);
   return apiFetch<CheckResponse>(`/polls/${pollId}/check?${params.toString()}`);
 }
 
@@ -48,6 +54,7 @@ export function submitVote(
   fingerprint: string,
   votes: VoteEntry[],
   voterToken?: string | null,
+  ballotToken?: string | null,
 ) {
   return apiFetch<{ ok: boolean }>(`/polls/${pollId}/vote`, {
     method: 'POST',
@@ -55,6 +62,7 @@ export function submitVote(
       fingerprint,
       votes,
       voter_token: voterToken ?? undefined,
+      ballot_token: ballotToken ?? undefined,
     }),
   });
 }
