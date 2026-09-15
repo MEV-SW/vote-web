@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { CompletePage } from './pages/CompletePage';
 import { HomePage } from './pages/HomePage';
 import { PublicResultsPage } from './pages/PublicResultsPage';
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/polls/:pollId/results" element={<PublicResultsPage />} />
           <Route path="/polls/:pollId" element={<VotePage />} />
           <Route path="/polls/:pollId/complete" element={<CompletePage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
           <Route element={<AdminGuard />}>
             <Route path="/admin" element={<ManagePage />} />

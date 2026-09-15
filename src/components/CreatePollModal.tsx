@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { PollKind, PollType, VerifyField } from '../types/api';
+import type { PollKind, PollType, VerifyField, VerifyMethod } from '../types/api';
 import { AdminWarnBanner } from './AdminWarnBanner';
 import { CloseButton } from './CloseButton';
 import { VerifyFieldPicker } from './VerifyFieldPicker';
@@ -21,6 +21,7 @@ interface CreatePollModalProps {
     verify_fields: VerifyField[];
     kind: PollKind;
     identity_mode: 'identified' | 'secret';
+    verify_method: VerifyMethod;
     candidates: { name: string; team?: string }[];
   }) => void;
 }
@@ -34,6 +35,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
   const [pollType, setPollType] = useState<PollType>('open');
   const [kind, setKind] = useState<PollKind>('vote');
   const [identityMode, setIdentityMode] = useState<'identified' | 'secret'>('identified');
+  const [verifyMethod, setVerifyMethod] = useState<VerifyMethod>('pin');
   const [verifyFields, setVerifyFields] = useState<VerifyField[]>(['email']);
   const [cands, setCands] = useState<CandDraft[]>([{ name: '', team: '' }, { name: '', team: '' }]);
 
@@ -68,6 +70,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
       verify_fields: verifyFields,
       kind,
       identity_mode: kind === 'form' || pollType === 'open' ? (kind === 'form' ? 'identified' : 'secret') : identityMode,
+      verify_method: pollType === 'restricted' ? verifyMethod : 'pin',
       candidates: kind === 'form' ? [] : filled.map((c) => ({ name: c.name.trim(), team: c.team.trim() || undefined })),
     });
   };
@@ -115,6 +118,13 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
           </label>
           {pollType === 'restricted' && (
             <>
+              <label className="cp-field">
+                <span className="cp-label">확인 방법</span>
+                <select className="cp-input" value={verifyMethod} onChange={(e) => setVerifyMethod(e.target.value as VerifyMethod)}>
+                  <option value="pin">비밀번호(PIN)</option>
+                  <option value="sso">회사 계정(SSO)</option>
+                </select>
+              </label>
               {kind === 'vote' && (
                 <label className="cp-field">
                   <span className="cp-label">기명 / 무기명</span>
@@ -124,10 +134,17 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
                   </select>
                 </label>
               )}
-              <VerifyFieldPicker value={verifyFields} onChange={setVerifyFields} />
-              <p className="cp-hint">
-                특정 투표는 생성 후 <b>수정</b> 화면에서 선택한 인증 항목 기준으로 대상자를 등록해야 합니다.
-              </p>
+              {verifyMethod === 'pin' && (
+                <>
+                  <VerifyFieldPicker value={verifyFields} onChange={setVerifyFields} />
+                  <p className="cp-hint">
+                    특정 투표는 생성 후 <b>수정</b> 화면에서 선택한 인증 항목 기준으로 대상자를 등록해야 합니다.
+                  </p>
+                </>
+              )}
+              {verifyMethod === 'sso' && (
+                <p className="cp-hint">회사 계정으로 자격을 확인합니다. 대상자를 미리 등록하지 않습니다.</p>
+              )}
             </>
           )}
           {kind === 'form' && <p className="cp-hint">인터뷰 폼은 기명입니다. 누가 답했는지를 남깁니다.</p>}

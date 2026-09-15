@@ -1,5 +1,6 @@
 import { apiFetch, ApiError } from './client';
 import type {
+  AuthConfig,
   Candidate,
   EligibleVoter,
   EligibleVoterCreate,
@@ -12,6 +13,10 @@ import type {
   QuestionOption,
   ResultsOut,
 } from '../types/api';
+
+export function getAuthConfig() {
+  return apiFetch<AuthConfig>('/admin/auth/config');
+}
 
 export function login(username: string, password: string) {
   return apiFetch<{ access_token: string }>('/admin/login', {

@@ -229,3 +229,11 @@ export interface QuestionCreatePayload {
   scale_max?: number;
   options?: { label: string }[];
 }
+
+export interface AuthConfig {
+  mode: string;
+  local_enabled: boolean;
+  oidc_enabled: boolean;
+  issuer?: string | null;
+  client_id?: string | null;
+}

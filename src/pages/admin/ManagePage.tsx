@@ -254,9 +254,10 @@ export function ManagePage() {
                 closes_at: draft.closes_at ? `${draft.closes_at}T18:00:00` : undefined,
                 max_selections: draft.max_selections,
                 poll_type: draft.poll_type,
-                verify_fields: draft.poll_type === 'restricted' ? draft.verify_fields : undefined,
+                verify_fields: draft.poll_type === 'restricted' && draft.verify_method === 'pin' ? draft.verify_fields : undefined,
                 kind: draft.kind,
                 identity_mode: draft.identity_mode,
+                verify_method: draft.verify_method,
                 candidates: draft.candidates,
               });
               setCreating(false);
