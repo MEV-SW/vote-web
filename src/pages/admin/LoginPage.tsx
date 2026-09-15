@@ -51,7 +51,7 @@ export function LoginPage() {
       <form className="login-card" onSubmit={onSubmit}>
         <span className="eyebrow">Admin</span>
         <h1>로그인</h1>
-        <p className="login-sub">회사 계정 또는 로컬 관리자로 들어옵니다.</p>
+        <p className="login-sub">회사 계정으로 들어오면 내가 만든 투표·폼만 관리합니다.</p>
         {authCfg?.oidc_enabled && (
           <>
             <button type="button" className="btn btn-primary" disabled={ssoLoading} onClick={() => void onSso()} style={{ width: '100%' }}>

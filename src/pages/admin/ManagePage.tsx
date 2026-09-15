@@ -53,6 +53,8 @@ export function ManagePage() {
       if (e instanceof ApiError && e.status === 401) {
         clearToken();
         navigate('/admin/login');
+      } else if (e instanceof ApiError && e.status === 403) {
+        setError(e.message || '접근 권한이 없습니다.');
       } else {
         setError('목록을 불러올 수 없습니다.');
       }
@@ -91,9 +93,9 @@ export function ManagePage() {
     <div className="manage-page">
       <header className="manage-hero">
         <div>
-          <span className="eyebrow">Admin · Poll Manager</span>
-          <h1 className="manage-title">투표 관리</h1>
-          <p className="manage-sub">새 투표를 만들고, 시작·종료를 제어하고, 결과를 확인합니다.</p>
+          <span className="eyebrow">Host · My polls</span>
+          <h1 className="manage-title">내 투표</h1>
+          <p className="manage-sub">내가 만든 투표·폼만 보입니다. 전역 대시보드는 없습니다.</p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <Link to="/" className="btn btn-ghost">투표 목록</Link>
@@ -105,7 +107,7 @@ export function ManagePage() {
       {error && <p style={{ color: 'oklch(0.5 0.15 25)', marginBottom: 16 }}>{error}</p>}
 
       <div className="manage-stats">
-        <div className="mstat"><div className="mstat-v">{polls.length}</div><div className="mstat-k">전체 투표</div></div>
+        <div className="mstat"><div className="mstat-v">{polls.length}</div><div className="mstat-k">내 항목</div></div>
         <div className="mstat"><div className="mstat-v">{activeCount}</div><div className="mstat-k">진행중</div></div>
         <div className="mstat"><div className="mstat-v">{totalBallots.toLocaleString()}</div><div className="mstat-k">누적 참여 표</div></div>
         <div className="mstat"><div className="mstat-v">{polls.filter((p) => p.status === 'draft').length}</div><div className="mstat-k">준비중</div></div>
