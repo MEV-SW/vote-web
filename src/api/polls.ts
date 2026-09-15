@@ -27,6 +27,13 @@ export function getPublicResults(pollId: number) {
   return apiFetch<ResultsOut>(`/polls/${pollId}/results`);
 }
 
+export function verifySso(pollId: number, accessToken: string) {
+  return apiFetch<VerifyVoterResponse>(`/polls/${pollId}/verify-sso`, {
+    method: 'POST',
+    body: JSON.stringify({ access_token: accessToken }),
+  });
+}
+
 export function verifyVoter(
   pollId: number,
   payload: { name?: string; email?: string; phone?: string; pin?: string },

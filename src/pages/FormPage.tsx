@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { checkVote, getPoll, submitFormResponse } from '../api/polls';
 import { CountdownPill } from '../components/CountdownPill';
+import { SsoVerifyGate } from '../components/SsoVerifyGate';
 import { VoteVerifyGate } from '../components/VoteVerifyGate';
 import { getFingerprint } from '../lib/fingerprint';
 import { pollIntroText } from '../lib/pollIntro';
@@ -34,6 +35,7 @@ export function FormPage() {
   const [verified, setVerified] = useState(false);
 
   const isRestricted = (poll?.poll_type ?? 'open') === 'restricted';
+  const isSso = isRestricted && (poll?.verify_method ?? 'pin') === 'sso';
   const needGate = isRestricted && !verified;
   const editable = isRestricted && poll?.status === 'active' && submitted;
 
@@ -125,11 +127,15 @@ export function FormPage() {
   if (needGate) {
     return (
       <div className="vote-page">
-        <VoteVerifyGate
-          pollId={id}
-          verifyFields={parseVerifyFields(poll.verify_fields)}
-          onVerified={(token, name) => void onVerified(token, name)}
-        />
+        {isSso
+          ? <SsoVerifyGate pollId={id} kindLabel="폼 제출" />
+          : (
+            <VoteVerifyGate
+              pollId={id}
+              verifyFields={parseVerifyFields(poll.verify_fields)}
+              onVerified={(token, name) => void onVerified(token, name)}
+            />
+          )}
       </div>
     );
   }

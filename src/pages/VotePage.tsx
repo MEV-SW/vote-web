@@ -5,6 +5,7 @@ import { CandidateCard } from '../components/CandidateCard';
 import { CountdownPill } from '../components/CountdownPill';
 import { Lightbox } from '../components/Lightbox';
 import { VoteVerifyGate } from '../components/VoteVerifyGate';
+import { SsoVerifyGate } from '../components/SsoVerifyGate';
 import { FormPage } from './FormPage';
 import { Medal } from '../components/Medal';
 import { Placeholder } from '../components/Placeholder';
@@ -56,6 +57,7 @@ export function VotePage() {
   const sheetDragging = useRef(false);
 
   const isRestricted = (poll?.poll_type ?? 'open') === 'restricted';
+  const isSso = isRestricted && (poll?.verify_method ?? 'pin') === 'sso';
   const isSecret = (poll?.identity_mode ?? 'secret') === 'secret' && isRestricted;
   const ballotEditable = isRestricted && poll?.status === 'active' && voted && (!isSecret || Boolean(ballotToken));
   const ballotLocked = voted && !ballotEditable;
@@ -264,7 +266,9 @@ export function VotePage() {
       </header>
 
       {isRestricted && !canVote && (
-        <VoteVerifyGate pollId={id} verifyFields={verifyFields} onVerified={onVerified} />
+        isSso
+          ? <SsoVerifyGate pollId={id} kindLabel={isSecret ? '무기명 투표' : '투표'} />
+          : <VoteVerifyGate pollId={id} verifyFields={verifyFields} onVerified={onVerified} />
       )}
 
       {isRestricted && verified && voterName && !isSecret && !ballotLocked && (

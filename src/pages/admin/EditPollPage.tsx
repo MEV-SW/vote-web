@@ -64,7 +64,7 @@ export function EditPollPage() {
     setTitle(p.title);
     setDescription(p.description?.trim() || p.subtitle?.trim() || '');
     setVerifyFields(parseVerifyFields(p.verify_fields));
-    if (p.poll_type === 'restricted') {
+    if (p.poll_type === 'restricted' && p.verify_method !== 'sso') {
       setVoters(await listEligibleVoters(token, id));
     } else {
       setVoters([]);
@@ -284,7 +284,7 @@ export function EditPollPage() {
         </form>
       </section>
 
-      {poll.poll_type === 'restricted' && (
+      {poll.poll_type === 'restricted' && poll.verify_method !== 'sso' && (
         <section className="edit-card">
           <div className="edit-card-head">
             <h2 className="edit-card-title">투표 대상자</h2>
@@ -354,6 +354,13 @@ export function EditPollPage() {
           ) : (
             <p className="ev-empty">등록된 대상자가 없습니다. 투표 시작 전에 대상자를 추가해주세요.</p>
           )}
+        </section>
+      )}
+
+      {poll.poll_type === 'restricted' && poll.verify_method === 'sso' && (
+        <section className="edit-card">
+          <h2 className="edit-card-title">대상자</h2>
+          <p className="edit-art-hint">회사 계정으로 자격을 확인합니다. 대상자를 미리 등록하지 않습니다.</p>
         </section>
       )}
 
