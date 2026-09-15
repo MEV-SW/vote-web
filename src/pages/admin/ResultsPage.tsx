@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getPollAdmin, getResults, getResultsCsvUrl, getFormResults, getFormResultsCsvUrl, resetPollVotes, updatePoll } from '../../api/admin';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FormResultsView } from '../../components/FormResultsView';
@@ -10,6 +10,7 @@ import { QrOpenButton } from '../../components/QrOpenButton';
 import { getToken } from '../../lib/auth';
 import { rankNumbers } from '../../lib/rankSlots';
 import type { FormResultsOut, Poll, ResultRow, ResultsOut } from '../../types/api';
+import { ApiError } from '../../api/client';
 import { AdminWarnBanner } from '../../components/AdminWarnBanner';
 import { hasSelectionMismatch, selectionMismatchMessage } from '../../lib/pollWarnings';
 import { EligibleVotersPanel } from '../../components/EligibleVotersPanel';
@@ -24,6 +25,7 @@ function rankCounts(row: ResultRow, maxSel: number): number[] {
 
 export function ResultsPage() {
   const { pollId } = useParams();
+  const navigate = useNavigate();
   const id = Number(pollId);
   const token = getToken()!;
   const [poll, setPoll] = useState<Poll | null>(null);
@@ -34,16 +36,22 @@ export function ResultsPage() {
   const [resetting, setResetting] = useState(false);
 
   const load = useCallback(async () => {
-    const p = await getPollAdmin(token, id);
-    setPoll(p);
-    if (p.kind === 'form') {
-      setFormResults(await getFormResults(token, id));
-      setResults(null);
-    } else {
-      setResults(await getResults(token, id));
-      setFormResults(null);
+    try {
+      const p = await getPollAdmin(token, id);
+      setPoll(p);
+      if (p.kind === 'form') {
+        setFormResults(await getFormResults(token, id));
+        setResults(null);
+      } else {
+        setResults(await getResults(token, id));
+        setFormResults(null);
+      }
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 403 || e.status === 404)) {
+        navigate('/admin');
+      }
     }
-  }, [token, id]);
+  }, [token, id, navigate]);
 
   useEffect(() => { void load(); }, [load]);
 

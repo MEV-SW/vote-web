@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   addCandidate,
   addEligibleVoter,
@@ -35,6 +35,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function EditPollPage() {
   const { pollId } = useParams();
+  const navigate = useNavigate();
   const id = Number(pollId);
   const token = getToken()!;
   const [poll, setPoll] = useState<Poll | null>(null);
@@ -59,15 +60,21 @@ export function EditPollPage() {
   const [showResultsMode, setShowResultsMode] = useState(false);
 
   const load = async () => {
-    const p = await getPollAdmin(token, id);
-    setPoll(p);
-    setTitle(p.title);
-    setDescription(p.description?.trim() || p.subtitle?.trim() || '');
-    setVerifyFields(parseVerifyFields(p.verify_fields));
-    if (p.poll_type === 'restricted' && p.verify_method !== 'sso') {
-      setVoters(await listEligibleVoters(token, id));
-    } else {
-      setVoters([]);
+    try {
+      const p = await getPollAdmin(token, id);
+      setPoll(p);
+      setTitle(p.title);
+      setDescription(p.description?.trim() || p.subtitle?.trim() || '');
+      setVerifyFields(parseVerifyFields(p.verify_fields));
+      if (p.poll_type === 'restricted' && p.verify_method !== 'sso') {
+        setVoters(await listEligibleVoters(token, id));
+      } else {
+        setVoters([]);
+      }
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 403 || e.status === 404)) {
+        navigate('/admin');
+      }
     }
   };
 

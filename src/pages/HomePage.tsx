@@ -102,7 +102,7 @@ export function HomePage() {
             별도 로그인 없이 각 투표 페이지에서 본인 확인·기기 제한이 적용됩니다.
           </p>
         </div>
-        <Link to="/admin/login" className="btn btn-ghost btn-sm home-admin-link">관리자</Link>
+        <Link to="/admin/login" className="btn btn-ghost btn-sm home-admin-link">내 투표</Link>
       </header>
 
       {loading && <p className="home-status">불러오는 중…</p>}
