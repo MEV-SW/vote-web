@@ -58,22 +58,29 @@
   color: var(--ink-3);
 }
 
-.home-section { margin-bottom: 36px; }
+.home-section { margin-bottom: 28px; }
 
-.home-section--closed { opacity: 0.92; }
+.home-section--closed { opacity: 0.88; }
+
+.home-section-head-glass {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 16px;
+}
 
 .home-section-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  padding: 8px 16px;
 }
 
 .home-section-head h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
 .home-section-count {
@@ -89,6 +96,28 @@
   color: var(--ink-3);
 }
 
+.home-poll-link {
+  display: block;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-poll-glass {
+  height: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-poll-link:hover .home-poll-glass {
+  transform: translateY(-2px);
+}
+
+.glass-tone-light.home-poll-glass.is-active {
+  box-shadow:
+    0 10px 36px color-mix(in oklch, var(--accent) 18%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--accent) 22%, white) inset !important;
+}
+
 .home-poll-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -100,31 +129,27 @@
   flex-direction: column;
   gap: 12px;
   padding: 18px 18px 16px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  text-decoration: none;
+  border-radius: inherit;
+  border: none;
+  background: transparent;
+  box-shadow: none;
   color: inherit;
-  transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease;
+  height: 100%;
 }
 
-.home-poll-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: oklch(0.82 0.05 var(--accent-h));
-}
-
-.home-poll-card.is-active {
-  border-color: oklch(0.84 0.06 var(--accent-h));
-  background: linear-gradient(180deg, oklch(0.99 0.02 var(--accent-h) / 0.5) 0%, var(--surface) 42%);
+.home-poll-card.is-active .home-poll-cat {
+  color: var(--accent-strong);
 }
 
 .home-poll-card-top {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 6px 8px;
+}
+
+.home-poll-card-top .home-poll-cat {
+  margin-right: auto;
 }
 
 .home-poll-cat {
@@ -188,7 +213,7 @@
   gap: 12px;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
 }
 
 .home-poll-closes {

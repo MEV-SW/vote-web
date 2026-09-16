@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { exchangeOidcToken } from '../api/admin';
 import { verifySso } from '../api/polls';
 import { ApiError } from '../api/client';
-import { setToken } from '../lib/auth';
+import { postLoginPath, setToken } from '../lib/auth';
 import { setBallotToken } from '../lib/ballotToken';
 import { completeSsoLogin } from '../lib/oidc';
 import { setVoterSession } from '../lib/voterToken';
@@ -12,9 +13,11 @@ export function AuthCallbackPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const { user, state } = await completeSsoLogin();
+        if (cancelled) return;
         const access = user.access_token;
         if (state.purpose === 'voter' && state.pollId) {
           const res = await verifySso(state.pollId, access);
@@ -23,12 +26,20 @@ export function AuthCallbackPage() {
           navigate(state.returnTo || `/polls/${state.pollId}`, { replace: true });
           return;
         }
-        setToken(access);
-        navigate(state.returnTo?.startsWith('/admin') ? state.returnTo : '/admin', { replace: true });
+        const { access_token } = await exchangeOidcToken(access);
+        setToken(access_token);
+        const saved = sessionStorage.getItem('vote_login_return');
+        sessionStorage.removeItem('vote_login_return');
+        navigate(postLoginPath(state.returnTo || saved), { replace: true });
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : '회사 계정 로그인에 실패했습니다.');
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : '회사 계정 로그인에 실패했습니다.');
+        }
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   if (error) {

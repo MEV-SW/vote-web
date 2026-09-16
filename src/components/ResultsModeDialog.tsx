@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ModalPortal } from './ModalPortal';
 
 interface ResultsModeDialogProps {
   pollId: number;
@@ -34,6 +35,7 @@ export function ResultsModeDialog({ pollId, pollTitle, onClose }: ResultsModeDia
   };
 
   return (
+    <ModalPortal>
     <div className="confirm-backdrop" onClick={onClose}>
       <div
         className="confirm-dialog results-mode-dialog"
@@ -62,5 +64,6 @@ export function ResultsModeDialog({ pollId, pollTitle, onClose }: ResultsModeDia
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

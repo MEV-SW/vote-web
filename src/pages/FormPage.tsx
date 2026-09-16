@@ -145,7 +145,7 @@ export function FormPage() {
   return (
     <div className="vote-page form-page">
       <header className="vote-head">
-        <Link to="/" className="vote-back">← 목록</Link>
+        <Link to="/?tab=join" className="vote-back">← 목록</Link>
         <div>
           <span className="eyebrow">Interview form</span>
           <h1>{poll.title}</h1>

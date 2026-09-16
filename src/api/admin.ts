@@ -25,6 +25,13 @@ export function login(username: string, password: string) {
   });
 }
 
+/** Swap short Keycloak access token for Vote session JWT (browser SSO). */
+export function exchangeOidcToken(keycloakAccessToken: string) {
+  return apiFetch<{ access_token: string }>('/admin/auth/exchange', {
+    method: 'POST',
+  }, keycloakAccessToken);
+}
+
 export function listPolls(token: string) {
   return apiFetch<PollListItem[]>('/admin/polls', {}, token);
 }

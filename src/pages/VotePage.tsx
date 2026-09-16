@@ -245,7 +245,7 @@ export function VotePage() {
       <header className="vote-hero">
         <div className="vote-hero-top">
           <div className="vote-hero-nav">
-            <Link to="/" className="vote-back-link">← 투표 목록</Link>
+            <Link to="/?tab=join" className="vote-back-link">← 투표 목록</Link>
             <span className="eyebrow">Internal Vote · Poll #{poll.id}</span>
           </div>
           <div className="vote-status">

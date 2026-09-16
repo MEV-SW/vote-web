@@ -16,6 +16,11 @@ import { ArtworkLightbox } from '../../components/ArtworkLightbox';
 import { Placeholder } from '../../components/Placeholder';
 import { PtBtn } from '../../components/PtBtn';
 import { ResultsModeDialog } from '../../components/ResultsModeDialog';
+import { Button } from '@/components/ui/button';
+import { FormField, FormSection } from '@/components/ui/form-section';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { getToken } from '../../lib/auth';
 import { hasFigmaPrototype, normalizeExternalUrl } from '../../lib/imageUrl';
 import type { Candidate, EligibleVoter, Poll, VerifyField } from '../../types/api';
@@ -73,12 +78,14 @@ export function EditPollPage() {
       }
     } catch (e) {
       if (e instanceof ApiError && (e.status === 403 || e.status === 404)) {
-        navigate('/admin');
+        navigate('/?tab=manage');
       }
     }
   };
 
-  useEffect(() => { load(); }, [id, token]);
+  useEffect(() => {
+    void load();
+  }, [id, token]);
 
   const saveMeta = async (e: FormEvent) => {
     e.preventDefault();
@@ -230,38 +237,46 @@ export function EditPollPage() {
     setViewerIndex((viewerIndex + dir + n) % n);
   };
 
-  if (!poll) return <div className="manage-page">불러오는 중…</div>;
+  if (!poll) {
+    return <div className="manage-page edit-page text-muted-foreground">불러오는 중…</div>;
+  }
 
   const statusCls = poll.status === 'active' ? 'st-active' : poll.status === 'draft' ? 'st-draft' : 'st-closed';
   const mediaBusy = uploadingId !== null || figmaSavingId !== null;
   const maxSel = poll.max_selections ?? 3;
   const selectionWarn = poll.kind !== 'form' && hasSelectionMismatch(poll.candidates.length, maxSel);
+  const isForm = poll.kind === 'form';
 
   return (
     <div className="manage-page edit-page">
       <header className="manage-hero edit-hero">
         <nav className="admin-top-nav" aria-label="페이지 이동">
-          <Link to="/admin" className="eyebrow admin-top-nav-link">← 투표 관리</Link>
-          <span className="admin-top-nav-sep" aria-hidden>·</span>
-          <Link to="/" className="eyebrow admin-top-nav-link">투표 목록</Link>
+          <Link to="/?tab=manage" className="eyebrow admin-top-nav-link">
+            ← 투표 관리
+          </Link>
+          <span className="admin-top-nav-sep" aria-hidden>
+            ·
+          </span>
+          <Link to="/?tab=join" className="eyebrow admin-top-nav-link">
+            투표 목록
+          </Link>
         </nav>
         <div className="edit-toolbar">
           <div className="edit-toolbar-title">
-            <h1 className="manage-title">{poll.kind === 'form' ? '폼 수정' : '투표 수정'}</h1>
+            <h1 className="manage-title">{isForm ? '폼 수정' : '투표 수정'}</h1>
             <span className={`pill st-pill ${statusCls}`}>
               {poll.status === 'active' && <span className="dot" />}
               {STATUS_LABEL[poll.status] ?? poll.status}
             </span>
             <span className="edit-toolbar-meta">
-              Poll #{poll.id} · {poll.kind === 'form' ? '폼' : '투표'} · {poll.poll_type === 'restricted' ? '특정' : '불특정'}
-              {poll.kind === 'form' ? ` · 문항 ${poll.questions?.length ?? 0}개` : ` · 후보 ${poll.candidates.length}명`}
+              Poll #{poll.id} · {isForm ? '폼' : '투표'} · {poll.poll_type === 'restricted' ? '특정' : '불특정'}
+              {isForm
+                ? ` · 문항 ${poll.questions?.length ?? 0}개`
+                : ` · 후보 ${poll.candidates.length}명`}
             </span>
           </div>
           <div className="edit-toolbar-actions">
             {msg && <span className="edit-msg">{msg}</span>}
-            <button type="submit" form="edit-meta-form" className="btn btn-primary edit-save-btn" disabled={saving}>
-              {saving ? '저장 중…' : '저장하기'}
-            </button>
             <PtBtn variant="ghost" icon="📊" label="결과" onClick={() => setShowResultsMode(true)} />
           </div>
         </div>
@@ -271,232 +286,312 @@ export function EditPollPage() {
         <AdminWarnBanner message={selectionMismatchMessage(poll.candidates.length, maxSel)} />
       )}
 
-      <section className="edit-card">
-        <h2 className="edit-card-title">기본 정보</h2>
-        <form id="edit-meta-form" className="edit-form" onSubmit={saveMeta}>
-          <label className="cp-field">
-            <span className="cp-label">제목</span>
-            <input className="cp-input" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </label>
-          <label className="cp-field">
-            <span className="cp-label">안내 문구</span>
-            <textarea
-              className="cp-input cp-area"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              placeholder="투표자에게 보여줄 안내를 적어주세요. (선택)"
-            />
-          </label>
-        </form>
-      </section>
-
-      {poll.poll_type === 'restricted' && poll.verify_method !== 'sso' && (
-        <section className="edit-card">
-          <div className="edit-card-head">
-            <h2 className="edit-card-title">투표 대상자</h2>
-            <span className="edit-count">{voters.length}명</span>
+      <form id="edit-meta-form" className="edit-settings" onSubmit={saveMeta}>
+        <FormSection
+          title="기본 정보"
+          description={
+            isForm
+              ? '참여자에게 보이는 폼 제목과 안내 문구를 설정합니다.'
+              : '참여자에게 보이는 투표 제목과 안내 문구를 설정합니다.'
+          }
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+            <FormField label="제목" htmlFor="edit-title" className="col-span-full">
+              <Input
+                id="edit-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={isForm ? '예: 2026 프로젝트 인터뷰' : '예: 2026 사내 동아리 이름 공모'}
+              />
+            </FormField>
+            <FormField
+              label="안내 문구"
+              htmlFor="edit-desc"
+              className="col-span-full"
+              hint="비워두면 안내 문구 없이 표시됩니다."
+            >
+              <Textarea
+                id="edit-desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="투표자에게 보여줄 안내를 적어주세요. (선택)"
+              />
+            </FormField>
           </div>
-          <VerifyFieldPicker
-            value={verifyFields}
-            onChange={(next) => void saveVerifyFields(next)}
-            disabled={poll.status !== 'draft' || voterBusy}
-          />
-          <p className="edit-art-hint">
-            투표자는 <strong>{verifyFieldsLabel(verifyFields)}</strong>로 본인 확인합니다.
-            {poll.status !== 'draft' && ' 진행 중·종료된 투표는 인증 항목을 변경할 수 없습니다.'}
-          </p>
+        </FormSection>
 
-          <div className={`ev-add-row ev-add-row--${verifyFields.length}`}>
-            {verifyFields.includes('name') && (
-              <input className="cp-input" placeholder="이름 *" value={voterName} onChange={(e) => setVoterName(e.target.value)} />
-            )}
-            {verifyFields.includes('email') && (
-              <input className="cp-input" placeholder="이메일 *" value={voterEmail} onChange={(e) => setVoterEmail(e.target.value)} />
-            )}
-            {verifyFields.includes('phone') && (
-              <input className="cp-input" placeholder="전화번호 *" value={voterPhone} onChange={(e) => setVoterPhone(e.target.value)} />
-            )}
-            <button type="button" className="btn btn-primary" onClick={addVoter} disabled={voterBusy}>
-              추가
-            </button>
-          </div>
+        {poll.poll_type === 'restricted' && poll.verify_method !== 'sso' && (
+          <>
+            <Separator className="my-8" />
+            <FormSection
+              title="투표 대상자"
+              description={`현재 ${voters.length}명이 등록되어 있습니다. 인증 항목과 대상자 목록을 관리합니다.`}
+            >
+              <div className="space-y-5">
+                <VerifyFieldPicker
+                  value={verifyFields}
+                  onChange={(next) => void saveVerifyFields(next)}
+                  disabled={poll.status !== 'draft' || voterBusy}
+                />
+                <p className="text-sm text-muted-foreground">
+                  투표자는 <strong className="text-foreground">{verifyFieldsLabel(verifyFields)}</strong>로
+                  본인 확인합니다.
+                  {poll.status !== 'draft' && ' 진행 중·종료된 투표는 인증 항목을 변경할 수 없습니다.'}
+                </p>
 
-          <div className="ev-bulk">
-            <span className="cp-label">일괄 등록</span>
-            <p className="cp-hint">{bulkImportHint(verifyFields)}</p>
-            <textarea
-              className="cp-input cp-area ev-bulk-area"
-              rows={4}
-              placeholder={
-                verifyFields.includes('name') && verifyFields.includes('email')
-                  ? '홍길동, hong@company.com\n01012345678'
-                  : verifyFields.includes('email')
-                    ? 'hong@company.com\nkim@company.com'
-                    : '01012345678\n01098765432'
-              }
-              value={voterBulk}
-              onChange={(e) => setVoterBulk(e.target.value)}
-            />
-            <button type="button" className="btn btn-ghost" onClick={addVotersBulk} disabled={voterBusy || !voterBulk.trim()}>
-              일괄 추가
-            </button>
-          </div>
-
-          {voters.length > 0 ? (
-            <EligibleVotersPanel
-              pollId={id}
-              token={token}
-              verifyFields={verifyFields}
-              refreshKey={voterRefresh}
-              collapsible
-              title="투표 현황"
-              defaultExpanded
-              allowDelete
-              onMutate={() => {
-                setVoterRefresh((k) => k + 1);
-                void load();
-              }}
-            />
-          ) : (
-            <p className="ev-empty">등록된 대상자가 없습니다. 투표 시작 전에 대상자를 추가해주세요.</p>
-          )}
-        </section>
-      )}
-
-      {poll.poll_type === 'restricted' && poll.verify_method === 'sso' && (
-        <section className="edit-card">
-          <h2 className="edit-card-title">대상자</h2>
-          <p className="edit-art-hint">회사 계정으로 자격을 확인합니다. 대상자를 미리 등록하지 않습니다.</p>
-        </section>
-      )}
-
-      {poll.kind === 'form' ? (
-        <QuestionEditor poll={poll} token={token} onChange={load} onMessage={setMsg} />
-      ) : (
-      <section className="edit-card">
-        <div className="edit-card-head">
-          <h2 className="edit-card-title">후보 목록</h2>
-          <span className="edit-count">{poll.candidates.length}명</span>
-        </div>
-        <p className="edit-art-hint">
-          썸네일용 사진과 Figma 프로토타입 URL을 각각 등록할 수 있어요. 투표 화면에서는 사진이 썸네일로 보이고, 크게보기에서 Figma를 열 수 있습니다.
-        </p>
-
-        <div className="edit-cand-list">
-          {poll.candidates.map((c, i) => {
-            const hasPhoto = Boolean(c.image_url);
-            const hasFigma = hasFigmaPrototype(c);
-            const figmaValue = figmaDraft[c.id] ?? c.figma_url ?? '';
-            const figmaDirty = figmaValue.trim() !== (c.figma_url ?? '').trim();
-            return (
-              <article className="edit-cand-card" key={c.id} style={{ '--ph-h': c.tint } as React.CSSProperties}>
-                <div className="edit-cand-layout">
-                  <button
-                    type="button"
-                    className="edit-cand-thumb"
-                    onClick={() => openViewer(i)}
-                    aria-label={`${c.name} 후보 크게보기`}
-                  >
-                    <Placeholder cand={c} ratio="16 / 9" round="0" emojiSize={40} />
-                    {hasFigma && <span className="edit-thumb-badge edit-thumb-badge--figma">Figma</span>}
-                    {!hasPhoto && <span className="edit-thumb-badge edit-thumb-badge--empty">사진 없음</span>}
-                    <span className="edit-thumb-zoom" aria-hidden>
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2">
-                        <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
-                      </svg>
-                    </span>
-                  </button>
-
-                  <div className="edit-cand-main">
-                    <div className="edit-cand-topbar">
-                      <div className="edit-cand-head">
-                        <span className="edit-cnum">{i + 1}</span>
-                        <div className="edit-cand-info">
-                          <div className="edit-cand-name">{c.name}</div>
-                          {c.team && <div className="edit-cand-team">{c.team}</div>}
-                          {c.tagline && <div className="edit-cand-tag">{c.tagline}</div>}
-                        </div>
-                      </div>
-                      <button type="button" className="edit-cand-del" onClick={() => removeCand(c)}>
-                        삭제
-                      </button>
-                    </div>
-
-                    <div className="edit-cand-fields">
-                      <div className="edit-field">
-                        <span className="edit-field-label">썸네일</span>
-                        <div className="edit-field-body">
-                          <span className={`edit-field-chip${hasPhoto ? ' is-on' : ''}`}>
-                            {uploadingId === c.id ? '업로드 중…' : hasPhoto ? '사진 등록됨' : '미등록'}
-                          </span>
-                          <label className={`edit-field-btn${uploadingId === c.id ? ' is-busy' : ''}`}>
-                            {uploadingId === c.id ? '업로드 중…' : hasPhoto ? '사진 변경' : '사진 선택'}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="edit-file-input"
-                              disabled={mediaBusy}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                e.target.value = '';
-                                if (file) void onImage(c, file);
-                              }}
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="edit-field edit-field--wide">
-                        <span className="edit-field-label">Figma</span>
-                        <div className="edit-field-body edit-field-body--grow">
-                          <input
-                            className="cp-input edit-field-input"
-                            type="url"
-                            placeholder="https://www.figma.com/proto/..."
-                            value={figmaValue}
-                            disabled={mediaBusy}
-                            onChange={(e) => setFigmaDraft((d) => ({ ...d, [c.id]: e.target.value }))}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                void onFigmaUrl(c);
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="edit-field-btn edit-field-btn--primary"
-                            disabled={mediaBusy || (!figmaDirty && (Boolean(c.figma_url) || !figmaValue.trim()))}
-                            onClick={() => void onFigmaUrl(c)}
-                          >
-                            {figmaSavingId === c.id ? '저장 중…' : '저장'}
-                          </button>
-                          {hasFigma && !figmaDirty && (
-                            <span className="edit-field-chip is-on">연결됨</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className={`ev-add-row ev-add-row--${verifyFields.length}`}>
+                  {verifyFields.includes('name') && (
+                    <Input
+                      placeholder="이름 *"
+                      value={voterName}
+                      onChange={(e) => setVoterName(e.target.value)}
+                    />
+                  )}
+                  {verifyFields.includes('email') && (
+                    <Input
+                      placeholder="이메일 *"
+                      value={voterEmail}
+                      onChange={(e) => setVoterEmail(e.target.value)}
+                    />
+                  )}
+                  {verifyFields.includes('phone') && (
+                    <Input
+                      placeholder="전화번호 *"
+                      value={voterPhone}
+                      onChange={(e) => setVoterPhone(e.target.value)}
+                    />
+                  )}
+                  <Button type="button" onClick={() => void addVoter()} disabled={voterBusy}>
+                    추가
+                  </Button>
                 </div>
-              </article>
-            );
-          })}
-        </div>
 
-        <div className="edit-add-block">
-          <span className="cp-label">후보 추가</span>
-          <div className="edit-add-row">
-            <input className="cp-input" placeholder="후보 이름" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <input className="cp-input" placeholder="팀·제출자 (선택)" value={newTeam} onChange={(e) => setNewTeam(e.target.value)} />
-            <button type="button" className="btn btn-primary edit-add-btn" onClick={addCand} disabled={!newName.trim()}>
-              추가
-            </button>
-          </div>
+                <FormField label="일괄 등록" hint={bulkImportHint(verifyFields)}>
+                  <Textarea
+                    rows={4}
+                    placeholder={
+                      verifyFields.includes('name') && verifyFields.includes('email')
+                        ? '홍길동, hong@company.com\n01012345678'
+                        : verifyFields.includes('email')
+                          ? 'hong@company.com\nkim@company.com'
+                          : '01012345678\n01098765432'
+                    }
+                    value={voterBulk}
+                    onChange={(e) => setVoterBulk(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => void addVotersBulk()}
+                    disabled={voterBusy || !voterBulk.trim()}
+                  >
+                    일괄 추가
+                  </Button>
+                </FormField>
+
+                {voters.length > 0 ? (
+                  <EligibleVotersPanel
+                    pollId={id}
+                    token={token}
+                    verifyFields={verifyFields}
+                    refreshKey={voterRefresh}
+                    collapsible
+                    title="투표 현황"
+                    defaultExpanded
+                    allowDelete
+                    onMutate={() => {
+                      setVoterRefresh((k) => k + 1);
+                      void load();
+                    }}
+                  />
+                ) : (
+                  <p className="ev-empty">등록된 대상자가 없습니다. 투표 시작 전에 대상자를 추가해주세요.</p>
+                )}
+              </div>
+            </FormSection>
+          </>
+        )}
+
+        {poll.poll_type === 'restricted' && poll.verify_method === 'sso' && (
+          <>
+            <Separator className="my-8" />
+            <FormSection
+              title="대상자"
+              description="회사 계정으로 자격을 확인합니다. 대상자를 미리 등록하지 않습니다."
+            >
+              <p className="text-sm text-muted-foreground">
+                SSO로 로그인한 구성원만 이 {isForm ? '폼' : '투표'}에 참여할 수 있습니다.
+              </p>
+            </FormSection>
+          </>
+        )}
+
+        <Separator className="my-8" />
+
+        {isForm ? (
+          <FormSection
+            title="문항"
+            description="참여자가 답할 문항을 추가·수정합니다. 객관식은 보기까지 함께 관리하세요."
+          >
+            <QuestionEditor poll={poll} token={token} onChange={load} onMessage={setMsg} />
+          </FormSection>
+        ) : (
+          <FormSection
+            title="후보 목록"
+            description={`현재 ${poll.candidates.length}명. 썸네일 사진과 Figma 프로토타입 URL을 등록할 수 있습니다.`}
+          >
+            <div className="edit-cand-panel">
+              <div className="edit-cand-list">
+                {poll.candidates.map((c, i) => {
+                  const hasPhoto = Boolean(c.image_url);
+                  const hasFigma = hasFigmaPrototype(c);
+                  const figmaValue = figmaDraft[c.id] ?? c.figma_url ?? '';
+                  const figmaDirty = figmaValue.trim() !== (c.figma_url ?? '').trim();
+                  return (
+                    <article
+                      className="edit-cand-card"
+                      key={c.id}
+                      style={{ '--ph-h': c.tint } as React.CSSProperties}
+                    >
+                      <div className="edit-cand-layout">
+                        <button
+                          type="button"
+                          className="edit-cand-thumb"
+                          onClick={() => openViewer(i)}
+                          aria-label={`${c.name} 후보 크게보기`}
+                        >
+                          <Placeholder cand={c} ratio="16 / 9" round="0" emojiSize={40} />
+                          {hasFigma && <span className="edit-thumb-badge edit-thumb-badge--figma">Figma</span>}
+                          {!hasPhoto && (
+                            <span className="edit-thumb-badge edit-thumb-badge--empty">사진 없음</span>
+                          )}
+                          <span className="edit-thumb-zoom" aria-hidden>
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="13"
+                              height="13"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.2"
+                            >
+                              <circle cx="11" cy="11" r="7" />
+                              <line x1="16.5" y1="16.5" x2="21" y2="21" />
+                            </svg>
+                          </span>
+                        </button>
+
+                        <div className="edit-cand-main">
+                          <div className="edit-cand-topbar">
+                            <div className="edit-cand-head">
+                              <span className="edit-cnum">{i + 1}</span>
+                              <div className="edit-cand-info">
+                                <div className="edit-cand-name">{c.name}</div>
+                                {c.team && <div className="edit-cand-team">{c.team}</div>}
+                                {c.tagline && <div className="edit-cand-tag">{c.tagline}</div>}
+                              </div>
+                            </div>
+                            <button type="button" className="edit-cand-del" onClick={() => void removeCand(c)}>
+                              삭제
+                            </button>
+                          </div>
+
+                          <div className="edit-cand-fields">
+                            <div className="edit-field">
+                              <span className="edit-field-label">썸네일</span>
+                              <div className="edit-field-body">
+                                <span className={`edit-field-chip${hasPhoto ? ' is-on' : ''}`}>
+                                  {uploadingId === c.id ? '업로드 중…' : hasPhoto ? '사진 등록됨' : '미등록'}
+                                </span>
+                                <label className={`edit-field-btn${uploadingId === c.id ? ' is-busy' : ''}`}>
+                                  {uploadingId === c.id ? '업로드 중…' : hasPhoto ? '사진 변경' : '사진 선택'}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="edit-file-input"
+                                    disabled={mediaBusy}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      e.target.value = '';
+                                      if (file) void onImage(c, file);
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="edit-field edit-field--wide">
+                              <span className="edit-field-label">Figma</span>
+                              <div className="edit-field-body edit-field-body--grow">
+                                <Input
+                                  className="edit-field-input"
+                                  type="url"
+                                  placeholder="https://www.figma.com/proto/..."
+                                  value={figmaValue}
+                                  disabled={mediaBusy}
+                                  onChange={(e) =>
+                                    setFigmaDraft((d) => ({ ...d, [c.id]: e.target.value }))
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      void onFigmaUrl(c);
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={
+                                    mediaBusy || (!figmaDirty && (Boolean(c.figma_url) || !figmaValue.trim()))
+                                  }
+                                  onClick={() => void onFigmaUrl(c)}
+                                >
+                                  {figmaSavingId === c.id ? '저장 중…' : '저장'}
+                                </Button>
+                                {hasFigma && !figmaDirty && (
+                                  <span className="edit-field-chip is-on">연결됨</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="edit-add-inline">
+                <Input
+                  placeholder="후보 이름"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                />
+                <Input
+                  placeholder="팀·제출자 (선택)"
+                  value={newTeam}
+                  onChange={(e) => setNewTeam(e.target.value)}
+                />
+                <Button type="button" onClick={() => void addCand()} disabled={!newName.trim()}>
+                  후보 추가
+                </Button>
+              </div>
+            </div>
+          </FormSection>
+        )}
+
+        <Separator className="my-8" />
+        <div className="edit-settings-actions">
+          <Button type="button" variant="outline" asChild>
+            <Link to="/?tab=manage">돌아가기</Link>
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? '저장 중…' : '저장하기'}
+          </Button>
         </div>
-      </section>
-      )}
+      </form>
 
       {showResultsMode && (
         <ResultsModeDialog

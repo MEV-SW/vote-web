@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { CloseButton } from './CloseButton';
+import { ModalPortal } from './ModalPortal';
 
 interface QrCodeModalProps {
   pollId: number;
@@ -47,6 +48,7 @@ export function QrCodeModal({ pollId, title, onClose }: QrCodeModalProps) {
   };
 
   return (
+    <ModalPortal>
     <div className="qr-backdrop" onClick={onClose}>
       <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
         <CloseButton variant="surface" onClick={onClose} />
@@ -74,5 +76,6 @@ export function QrCodeModal({ pollId, title, onClose }: QrCodeModalProps) {
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

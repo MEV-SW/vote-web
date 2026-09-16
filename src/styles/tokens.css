@@ -1,37 +1,43 @@
 /* ============ Vote platform — design system ============ */
+/* Palette: 21st.dev google-remix (Primary #0c4288, white surfaces) */
 :root {
-  /* accent (driven by Tweaks) */
-  --accent-h: 256;
-  --accent: oklch(0.58 0.16 var(--accent-h));
-  --accent-strong: oklch(0.50 0.17 var(--accent-h));
-  --accent-soft: oklch(0.95 0.04 var(--accent-h));
-  --accent-ring: oklch(0.70 0.13 var(--accent-h));
+  /* accent — MotrexEV / Google-remix navy blue */
+  --accent-h: 255;
+  --accent: #0c4288;
+  --accent-strong: #09356e;
+  --accent-soft: color-mix(in srgb, #0c4288 10%, #ffffff);
+  --accent-ring: color-mix(in srgb, #0c4288 35%, #ffffff);
 
-  /* surfaces — cool, faintly blue-tinted neutrals */
-  --bg: oklch(0.975 0.008 255);
-  --bg-2: oklch(0.955 0.012 255);
-  --surface: oklch(1 0 0);
-  --line: oklch(0.90 0.012 255);
-  --line-strong: oklch(0.84 0.015 255);
+  /* surfaces — clean white workspace */
+  --bg: #ffffff;
+  --bg-2: #f9fafb;
+  --surface: #ffffff;
+  --line: #e8eaed;
+  --line-strong: #bfc1c5;
 
   /* ink */
-  --ink: oklch(0.26 0.02 260);
-  --ink-2: oklch(0.46 0.018 260);
-  --ink-3: oklch(0.60 0.015 260);
+  --ink: #1f1f1f;
+  --ink-2: #5f6368;
+  --ink-3: #80868b;
 
-  /* medals */
-  --gold: oklch(0.80 0.135 86);
-  --gold-deep: oklch(0.62 0.13 78);
-  --silver: oklch(0.80 0.012 255);
-  --silver-deep: oklch(0.58 0.015 255);
-  --bronze: oklch(0.70 0.105 52);
-  --bronze-deep: oklch(0.55 0.10 48);
+  /* charts / medals (Google remix) */
+  --chart-1: #114fb4;
+  --chart-2: #34a853;
+  --chart-3: #fbbc05;
+  --chart-4: #ea4335;
+  --chart-5: #a142f4;
+  --gold: #fbbc05;
+  --gold-deep: #e8a800;
+  --silver: #bfc1c5;
+  --silver-deep: #80868b;
+  --bronze: #ea4335;
+  --bronze-deep: #c5221f;
 
   --radius: 18px;
   --radius-sm: 12px;
-  --shadow-sm: 0 1px 2px oklch(0.4 0.03 260 / 0.06), 0 2px 8px oklch(0.4 0.03 260 / 0.05);
-  --shadow-md: 0 4px 14px oklch(0.4 0.03 260 / 0.10), 0 12px 30px oklch(0.4 0.03 260 / 0.08);
-  --shadow-lg: 0 10px 30px oklch(0.4 0.03 260 / 0.14), 0 24px 60px oklch(0.4 0.03 260 / 0.12);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05), 0 2px 8px rgb(15 23 42 / 0.04);
+  --shadow-md: 0 4px 14px rgb(15 23 42 / 0.08), 0 12px 28px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 10px 30px rgb(15 23 42 / 0.12), 0 24px 56px rgb(15 23 42 / 0.08);
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
   --font-display: "Space Grotesk", var(--font-sans);
@@ -42,15 +48,14 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: var(--font-sans);
   color: var(--ink);
-  background:
-    radial-gradient(1200px 600px at 12% -10%, oklch(0.94 0.05 var(--accent-h) / 0.55), transparent 60%),
-    radial-gradient(1000px 520px at 100% 0%, oklch(0.93 0.055 calc(var(--accent-h) + 60) / 0.45), transparent 55%),
-    var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-.app-root { min-height: 100vh; }
+.app-root {
+  min-height: 100vh;
+  background: var(--bg);
+}
 :root.no-flair body { background: var(--bg); }
 
 /* ---------- shared atoms ---------- */
@@ -77,9 +82,9 @@ body {
   color: #fff;
   padding: 15px 26px;
   font-size: 16px;
-  box-shadow: 0 6px 18px oklch(0.5 0.16 var(--accent-h) / 0.35);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
 }
-.btn-primary:hover { box-shadow: 0 10px 26px oklch(0.5 0.16 var(--accent-h) / 0.45); transform: translateY(-1px); }
+.btn-primary:hover { box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 45%, transparent); transform: translateY(-1px); }
 .btn-primary:disabled { background: var(--line-strong); color: oklch(0.7 0 0); box-shadow: none; cursor: not-allowed; transform: none; }
 .btn-ghost {
   background: var(--surface);

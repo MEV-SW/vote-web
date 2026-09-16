@@ -48,7 +48,7 @@ export function ResultsPage() {
       }
     } catch (e) {
       if (e instanceof ApiError && (e.status === 403 || e.status === 404)) {
-        navigate('/admin');
+        navigate('/?tab=manage');
       }
     }
   }, [token, id, navigate]);
@@ -88,7 +88,7 @@ export function ResultsPage() {
       <div className="admin-page">
         <header className="admin-hero">
           <nav className="admin-top-nav" aria-label="페이지 이동">
-            <Link to="/admin" className="eyebrow admin-top-nav-link">← 관리</Link>
+            <Link to="/?tab=manage" className="eyebrow admin-top-nav-link">← 관리</Link>
           </nav>
           <div className="admin-toolbar">
             <h1 className="admin-title">{poll.title}</h1>
@@ -153,9 +153,9 @@ export function ResultsPage() {
     <div className="admin-page">
       <header className="admin-hero">
         <nav className="admin-top-nav" aria-label="페이지 이동">
-          <Link to="/admin" className="eyebrow admin-top-nav-link">← 투표 관리</Link>
+          <Link to="/?tab=manage" className="eyebrow admin-top-nav-link">← 투표 관리</Link>
           <span className="admin-top-nav-sep" aria-hidden>·</span>
-          <Link to="/" className="eyebrow admin-top-nav-link">투표 목록</Link>
+          <Link to="/?tab=join" className="eyebrow admin-top-nav-link">투표 목록</Link>
         </nav>
         <div className="admin-toolbar">
           <div className="admin-toolbar-title">

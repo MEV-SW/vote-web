@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { ModalPortal } from './ModalPortal';
 
 interface ConfirmDialogProps {
   title: string;
@@ -32,6 +33,7 @@ export function ConfirmDialog({
   }, [onCancel]);
 
   return (
+    <ModalPortal>
     <div className="confirm-backdrop" onClick={onCancel}>
       <div className="confirm-dialog" role="alertdialog" aria-labelledby="confirm-title" aria-describedby="confirm-msg" onClick={(e) => e.stopPropagation()}>
         <h2 id="confirm-title" className="confirm-title">{title}</h2>
@@ -42,5 +44,6 @@ export function ConfirmDialog({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }
