@@ -234,6 +234,7 @@ export interface AuthConfig {
   mode: string;
   local_enabled: boolean;
   oidc_enabled: boolean;
+  password_login_enabled?: boolean;
   issuer?: string | null;
   client_id?: string | null;
 }

@@ -37,7 +37,9 @@ export function AuthCallbackPage() {
         <div className="login-card">
           <h1>로그인 실패</h1>
           <p className="login-error">{error}</p>
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/admin/login')}>돌아가기</button>
+          <button type="button" className="btn btn-primary" onClick={() => navigate('/login')}>
+            돌아가기
+          </button>
         </div>
       </div>
     );

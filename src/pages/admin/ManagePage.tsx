@@ -52,7 +52,7 @@ export function ManagePage() {
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
         clearToken();
-        navigate('/admin/login');
+        navigate('/login');
       } else if (e instanceof ApiError && e.status === 403) {
         setError(e.message || '접근 권한이 없습니다.');
       } else {
@@ -99,7 +99,7 @@ export function ManagePage() {
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <Link to="/" className="btn btn-ghost">투표 목록</Link>
-          <button type="button" className="btn btn-ghost" onClick={() => { clearToken(); navigate('/admin/login'); }}>로그아웃</button>
+          <button type="button" className="btn btn-ghost" onClick={() => { clearToken(); navigate('/login'); }}>로그아웃</button>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>＋ 새 투표 만들기</button>
         </div>
       </header>

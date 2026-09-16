@@ -10,6 +10,11 @@ export async function loadAuthConfig(): Promise<AuthConfig> {
   return cachedConfig;
 }
 
+export function resetOidcClient() {
+  cachedConfig = null;
+  manager = null;
+}
+
 export function getOidcManager(cfg: AuthConfig): UserManager | null {
   if (!cfg.oidc_enabled || !cfg.issuer || !cfg.client_id) return null;
   if (manager) return manager;
@@ -25,15 +30,23 @@ export function getOidcManager(cfg: AuthConfig): UserManager | null {
   return manager;
 }
 
-export async function startSsoLogin(purpose: 'admin' | 'voter', pollId?: number) {
+export async function startSsoLogin(
+  purpose: 'admin' | 'voter',
+  pollId?: number,
+  returnTo?: string,
+) {
   const cfg = await loadAuthConfig();
   const um = getOidcManager(cfg);
   if (!um) throw new Error('회사 계정 로그인이 설정되지 않았습니다.');
+  const next =
+    returnTo ||
+    sessionStorage.getItem('vote_login_return') ||
+    window.location.pathname + window.location.search;
   await um.signinRedirect({
     state: JSON.stringify({
       purpose,
       pollId,
-      returnTo: window.location.pathname + window.location.search,
+      returnTo: next === '/login' ? '/' : next,
     }),
   });
 }
