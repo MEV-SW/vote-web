@@ -4,6 +4,11 @@ import { checkVote, getPoll, submitFormResponse } from '../api/polls';
 import { CountdownPill } from '../components/CountdownPill';
 import { SsoVerifyGate } from '../components/SsoVerifyGate';
 import { VoteVerifyGate } from '../components/VoteVerifyGate';
+import {
+  participateBadges,
+  participateKindLabel,
+  participateSummary,
+} from '../components/PollGateIntro';
 import { getFingerprint } from '../lib/fingerprint';
 import { pollIntroText } from '../lib/pollIntro';
 import { getVoterName, getVoterToken, setVoterSession } from '../lib/voterToken';
@@ -125,17 +130,37 @@ export function FormPage() {
     );
   }
   if (needGate) {
+    const gateKind = participateKindLabel(poll);
     return (
-      <div className="vote-page">
-        {isSso
-          ? <SsoVerifyGate pollId={id} kindLabel="폼 제출" onVerified={(token, name) => void onVerified(token, name)} />
-          : (
-            <VoteVerifyGate
-              pollId={id}
-              verifyFields={parseVerifyFields(poll.verify_fields)}
-              onVerified={(token, name) => void onVerified(token, name)}
-            />
+      <div className="vote-page vote-page--gate">
+        <nav className="vote-gate-nav" aria-label="페이지 이동">
+          <Link to="/?tab=join" className="vote-back-link">← 목록</Link>
+          {poll.status === 'active' ? (
+            <span className="pill pill-live"><span className="dot" />진행중</span>
+          ) : (
+            <span className="pill pill-closed">종료</span>
           )}
+        </nav>
+        {isSso ? (
+          <SsoVerifyGate
+            pollId={id}
+            kindLabel={gateKind}
+            title={poll.title}
+            summary={participateSummary(poll)}
+            badges={participateBadges(poll)}
+            onVerified={(token, name) => void onVerified(token, name)}
+          />
+        ) : (
+          <VoteVerifyGate
+            pollId={id}
+            kindLabel={gateKind}
+            title={poll.title}
+            summary={participateSummary(poll)}
+            badges={participateBadges(poll)}
+            verifyFields={parseVerifyFields(poll.verify_fields)}
+            onVerified={(token, name) => void onVerified(token, name)}
+          />
+        )}
       </div>
     );
   }

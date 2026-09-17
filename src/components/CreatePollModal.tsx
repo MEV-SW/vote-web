@@ -107,46 +107,65 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
 
   return (
     <ModalPortal>
-      <div className="cp-backdrop" onClick={onClose}>
-        <div className="cp-modal cp-modal--settings" onClick={(e) => e.stopPropagation()}>
+      <div className="cp-backdrop">
+        <div className="cp-modal cp-modal--settings">
           <div className="cp-head">
             <div>
               <span className="eyebrow">MotrexEV Vote</span>
-              <h2>{kind === 'form' ? '새 폼 만들기' : '새 투표 만들기'}</h2>
+              <h2>새로 만들기</h2>
             </div>
             <CloseButton variant="surface" onClick={onClose} />
           </div>
 
           <div className="cp-body cp-body--settings">
             <FormSection
+              title="무엇을 만들까요?"
+              description="처음부터 투표인지 폼인지 고릅니다. 나중에 바꿀 수 없습니다."
+            >
+              <div className="cp-kind-grid" role="radiogroup" aria-label="만들기 종류">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={kind === 'vote'}
+                  className={`cp-kind-card${kind === 'vote' ? ' is-on' : ''}`}
+                  onClick={() => setKind('vote')}
+                >
+                  <strong>순위 투표</strong>
+                  <span>후보를 순위대로 고르는 투표입니다.</span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={kind === 'form'}
+                  className={`cp-kind-card${kind === 'form' ? ' is-on' : ''}`}
+                  onClick={() => setKind('form')}
+                >
+                  <strong>인터뷰 폼</strong>
+                  <span>주관식·객관식 문항으로 답을 받습니다.</span>
+                </button>
+              </div>
+            </FormSection>
+
+            <Separator className="my-8" />
+
+            <FormSection
               title="기본 설정"
-              description="종류와 제목, 분류를 먼저 정합니다."
+              description={kind === 'form' ? '폼 제목과 분류를 정합니다.' : '투표 제목과 분류를 정합니다.'}
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                <FormField label="종류" className="col-span-full sm:col-span-3">
-                  <Select value={kind} onValueChange={(v) => setKind(v as PollKind)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="vote">순위 투표</SelectItem>
-                      <SelectItem value="form">인터뷰 폼</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormField>
-                <FormField label="분류" className="col-span-full sm:col-span-3">
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <FormField label="분류" className="col-span-full">
+                  <div className="cp-chip-row" role="group" aria-label="분류">
+                    {CATEGORIES.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`cp-chip${category === c ? ' is-on' : ''}`}
+                        onClick={() => setCategory(c)}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
                 </FormField>
                 <FormField
                   label={kind === 'form' ? '폼 제목' : '투표 제목'}
@@ -167,12 +186,16 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
                 <FormField
                   label="안내 문구"
                   className="col-span-full"
-                  hint="선택 사항입니다."
+                  hint="선택 사항입니다. QR로 들어올 때 로그인 전에 보입니다."
                 >
                   <Textarea
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
-                    placeholder="투표자에게 보여줄 안내를 적어주세요."
+                    placeholder={
+                      kind === 'form'
+                        ? '응답자에게 보여줄 안내를 적어주세요.'
+                        : '투표자에게 보여줄 안내를 적어주세요.'
+                    }
                     rows={2}
                   />
                 </FormField>
@@ -186,20 +209,29 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
               description="공개 범위와 본인 확인 방법을 설정합니다."
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                <FormField label="투표 타입" className="col-span-full">
-                  <Select value={pollType} onValueChange={(v) => setPollType(v as PollType)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="open">
-                        불특정 — 누구나 QR로 {kind === 'form' ? '제출' : '투표'}
-                      </SelectItem>
-                      <SelectItem value="restricted">
-                        특정 — 등록된 대상자만 {kind === 'form' ? '제출' : '투표'}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                <FormField label={kind === 'form' ? '참여 타입' : '투표 타입'} className="col-span-full">
+                  <div className="cp-kind-grid cp-kind-grid--compact" role="radiogroup" aria-label="참여 타입">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={pollType === 'open'}
+                      className={`cp-kind-card${pollType === 'open' ? ' is-on' : ''}`}
+                      onClick={() => setPollType('open')}
+                    >
+                      <strong>불특정</strong>
+                      <span>누구나 QR로 {kind === 'form' ? '제출' : '투표'}할 수 있습니다.</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={pollType === 'restricted'}
+                      className={`cp-kind-card${pollType === 'restricted' ? ' is-on' : ''}`}
+                      onClick={() => setPollType('restricted')}
+                    >
+                      <strong>특정</strong>
+                      <span>등록된 대상자만 {kind === 'form' ? '제출' : '투표'}할 수 있습니다.</span>
+                    </button>
+                  </div>
                 </FormField>
 
                 {pollType === 'restricted' && (
@@ -342,7 +374,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
             </Button>
             <Button type="button" disabled={!valid} onClick={submit}>
               {kind === 'form'
-                ? '폼 만들기'
+                ? '폼 만들고 문항 편집'
                 : `투표 만들기${filled.length ? ` · 후보 ${filled.length}명` : ''}`}
             </Button>
           </div>

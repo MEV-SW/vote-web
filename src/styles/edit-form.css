@@ -434,6 +434,75 @@
   width: min(880px, 100%);
 }
 
+.cp-kind-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.cp-kind-grid--compact {
+  gap: 8px;
+}
+.cp-kind-card {
+  appearance: none;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.cp-kind-card strong {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.cp-kind-card span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.cp-kind-card:hover {
+  border-color: color-mix(in oklch, var(--accent) 35%, var(--line));
+}
+.cp-kind-card.is-on {
+  border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
+  background: color-mix(in oklch, var(--accent) 8%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 25%, transparent);
+}
+.cp-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cp-chip {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.cp-chip.is-on {
+  color: #fff;
+  border-color: transparent;
+  background: var(--accent-strong, var(--accent));
+}
+
+@media (max-width: 560px) {
+  .cp-kind-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cp-body--settings {
   padding-top: 10px;
 }

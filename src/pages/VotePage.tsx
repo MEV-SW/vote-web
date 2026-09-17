@@ -6,6 +6,11 @@ import { CountdownPill } from '../components/CountdownPill';
 import { Lightbox } from '../components/Lightbox';
 import { VoteVerifyGate } from '../components/VoteVerifyGate';
 import { SsoVerifyGate } from '../components/SsoVerifyGate';
+import {
+  participateBadges,
+  participateKindLabel,
+  participateSummary,
+} from '../components/PollGateIntro';
 import { FormPage } from './FormPage';
 import { Medal } from '../components/Medal';
 import { Placeholder } from '../components/Placeholder';
@@ -233,6 +238,46 @@ export function VotePage() {
       ? `${chosenCount}명 선택 · ${remaining}순위 비어 있음`
       : `${chosenCount}명 선택 완료`;
 
+  const gateTitle = poll.title;
+  const gateSummary = participateSummary(poll);
+  const gateBadges = participateBadges(poll);
+  const gateKind = participateKindLabel(poll);
+
+  if (isRestricted && !canVote) {
+    return (
+      <div className="vote-page vote-page--gate">
+        <nav className="vote-gate-nav" aria-label="페이지 이동">
+          <Link to="/?tab=join" className="vote-back-link">← 투표 목록</Link>
+          {poll.status === 'active' ? (
+            <span className="pill pill-live"><span className="dot" />진행중</span>
+          ) : (
+            <span className="pill pill-closed">종료</span>
+          )}
+        </nav>
+        {isSso ? (
+          <SsoVerifyGate
+            pollId={id}
+            kindLabel={gateKind}
+            title={gateTitle}
+            summary={gateSummary}
+            badges={gateBadges}
+            onVerified={onVerified}
+          />
+        ) : (
+          <VoteVerifyGate
+            pollId={id}
+            kindLabel={gateKind}
+            title={gateTitle}
+            summary={gateSummary}
+            badges={gateBadges}
+            verifyFields={verifyFields}
+            onVerified={onVerified}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`vote-page${canVote && !ballotLocked && ballotSheetOpen ? ' ballot-sheet-open' : ''}`}>
       {selectionCompleteToast && !ballotLocked && (
@@ -264,12 +309,6 @@ export function VotePage() {
           </div>
         )}
       </header>
-
-      {isRestricted && !canVote && (
-        isSso
-          ? <SsoVerifyGate pollId={id} kindLabel={isSecret ? '무기명 투표' : '투표'} onVerified={onVerified} />
-          : <VoteVerifyGate pollId={id} verifyFields={verifyFields} onVerified={onVerified} />
-      )}
 
       {isRestricted && verified && voterName && !isSecret && !ballotLocked && (
         <div className="vote-verified-banner">

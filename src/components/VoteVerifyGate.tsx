@@ -4,6 +4,7 @@ import { verifyVoter } from '../api/polls';
 import { ApiError } from '../api/client';
 import type { VerifyField } from '../lib/verifyFields';
 import { verifyFieldsLabel } from '../lib/verifyFields';
+import { PollGateIntro } from './PollGateIntro';
 
 const FIELD_LABEL: Record<VerifyField, string> = {
   name: '이름',
@@ -14,12 +15,24 @@ const FIELD_LABEL: Record<VerifyField, string> = {
 interface VoteVerifyGateProps {
   pollId: number;
   verifyFields: VerifyField[];
+  title: string;
+  summary: string;
+  badges?: string[];
+  kindLabel?: string;
   onVerified: (token: string, name: string, ballotToken?: string | null) => void;
 }
 
 type Step = 'identity' | 'pin';
 
-export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyGateProps) {
+export function VoteVerifyGate({
+  pollId,
+  verifyFields,
+  title,
+  summary,
+  badges = [],
+  kindLabel = '투표',
+  onVerified,
+}: VoteVerifyGateProps) {
   const [step, setStep] = useState<Step>('identity');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -100,6 +113,7 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
   if (step === 'pin') {
     return (
       <section className="vote-verify" aria-label="투표 비밀번호 확인">
+        <PollGateIntro kindLabel={kindLabel} title={title} summary={summary} badges={badges} />
         <div className="vote-verify-card">
           <div className="vote-verify-head">
             <div className="vote-verify-icon" aria-hidden>
@@ -156,6 +170,7 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
 
   return (
     <section className="vote-verify" aria-label="투표 대상자 확인">
+      <PollGateIntro kindLabel={kindLabel} title={title} summary={summary} badges={badges} />
       <div className="vote-verify-card">
         <div className="vote-verify-head">
           <div className="vote-verify-icon" aria-hidden>

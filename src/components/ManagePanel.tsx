@@ -325,7 +325,7 @@ export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: Ma
           onClose={() => setCreating(false)}
           onCreate={async (draft) => {
             try {
-              await createPoll(token, {
+              const created = await createPoll(token, {
                 title: draft.title,
                 category: draft.category,
                 description: draft.desc || undefined,
@@ -343,8 +343,9 @@ export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: Ma
               });
               setCreating(false);
               await load();
+              navigate(`/admin/polls/${created.id}/edit`);
             } catch {
-              setError('투표 생성에 실패했습니다.');
+              setError(draft.kind === 'form' ? '폼 생성에 실패했습니다.' : '투표 생성에 실패했습니다.');
             }
           }}
         />
