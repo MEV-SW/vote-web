@@ -60,6 +60,11 @@
 
 .home-section { margin-bottom: 28px; }
 
+.join-panel {
+  width: 100%;
+  min-width: 0;
+}
+
 .home-section--closed { opacity: 0.88; }
 
 .home-section-head-glass {
@@ -73,6 +78,13 @@
   align-items: center;
   gap: 10px;
   padding: 8px 16px;
+}
+
+.home-section-head--plain {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 0;
+  justify-content: flex-start;
 }
 
 .home-section-head h2 {
@@ -98,13 +110,14 @@
 
 .home-poll-link {
   display: block;
-  height: 100%;
+  min-width: 0;
   text-decoration: none;
   color: inherit;
 }
 
 .home-poll-glass {
-  height: 100%;
+  min-width: 0;
+  height: auto;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -120,8 +133,10 @@
 
 .home-poll-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 .home-poll-card {
@@ -134,11 +149,31 @@
   background: transparent;
   box-shadow: none;
   color: inherit;
-  height: 100%;
+  min-height: 0;
+  height: auto;
 }
 
 .home-poll-card.is-active .home-poll-cat {
   color: var(--accent-strong);
+}
+
+.home-poll-card--solid {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  height: auto;
+  min-height: 0;
+}
+.home-poll-card--solid.is-active {
+  box-shadow:
+    0 10px 36px color-mix(in oklch, var(--accent) 14%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--accent) 18%, white);
+  border-color: color-mix(in oklch, var(--accent) 28%, var(--line));
+}
+.home-poll-link:hover .home-poll-card--solid {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .home-poll-card-top {
@@ -232,5 +267,27 @@
   .home-page { padding: 28px 16px 64px; }
   .home-hero { flex-direction: column; gap: 12px; }
   .home-admin-link { align-self: flex-start; }
-  .home-poll-grid { grid-template-columns: 1fr; }
+  .home-poll-grid { grid-template-columns: 1fr; gap: 12px; }
+  .home-poll-card {
+    padding: 16px 14px 14px;
+    gap: 10px;
+  }
+  .home-poll-card-top {
+    gap: 6px;
+  }
+  .home-poll-card-top .pill {
+    padding: 4px 9px;
+    font-size: 11px;
+    gap: 5px;
+  }
+  .home-poll-title {
+    font-size: 16.5px;
+  }
+  .home-poll-meta {
+    gap: 8px 10px;
+  }
+  .home-poll-link:hover .home-poll-card--solid,
+  .home-poll-link:hover .home-poll-glass {
+    transform: none;
+  }
 }

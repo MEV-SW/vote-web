@@ -11,6 +11,7 @@ import {
   participateKindLabel,
   participateSummary,
 } from '../components/PollGateIntro';
+import { AppShell } from '../components/AppShell';
 import { FormPage } from './FormPage';
 import { Medal } from '../components/Medal';
 import { Placeholder } from '../components/Placeholder';
@@ -218,9 +219,21 @@ export function VotePage() {
     }
   };
 
-  if (loading) return <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>불러오는 중…</div>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>불러오는 중…</div>
+      </AppShell>
+    );
+  }
   if (poll && (poll.kind ?? 'vote') === 'form') return <FormPage />;
-  if (error || !poll) return <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>{error || '투표를 찾을 수 없습니다.'}</div>;
+  if (error || !poll) {
+    return (
+      <AppShell>
+        <div className="vote-page" style={{ padding: 48, textAlign: 'center' }}>{error || '투표를 찾을 수 없습니다.'}</div>
+      </AppShell>
+    );
+  }
 
   const maxSel = poll.max_selections ?? 3;
   const intro = pollIntroText(poll);
@@ -245,6 +258,7 @@ export function VotePage() {
 
   if (isRestricted && !canVote) {
     return (
+      <AppShell>
       <div className="vote-page vote-page--gate">
         <nav className="vote-gate-nav" aria-label="페이지 이동">
           <Link to="/?tab=join" className="vote-back-link">← 투표 목록</Link>
@@ -275,10 +289,12 @@ export function VotePage() {
           />
         )}
       </div>
+      </AppShell>
     );
   }
 
   return (
+    <AppShell>
     <div className={`vote-page${canVote && !ballotLocked && ballotSheetOpen ? ' ballot-sheet-open' : ''}`}>
       {selectionCompleteToast && !ballotLocked && (
         <div className="vote-selection-toast" role="status" aria-live="polite">
@@ -523,5 +539,6 @@ export function VotePage() {
         />
       )}
     </div>
+    </AppShell>
   );
 }

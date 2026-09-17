@@ -54,7 +54,7 @@ body {
 }
 .app-root {
   min-height: 100vh;
-  background: var(--bg);
+  background: #fff;
 }
 :root.no-flair body { background: var(--bg); }
 
@@ -96,26 +96,34 @@ body {
 }
 .btn-ghost:hover { border-color: var(--line-strong); }
 .btn-danger {
-  background: oklch(0.55 0.2 25);
+  background: color-mix(in srgb, var(--accent-strong) 88%, #8b1e2d);
   color: #fff;
-  border: none;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid transparent;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 22%, transparent);
 }
-.btn-danger:hover { background: oklch(0.5 0.22 25); }
-.btn-danger:disabled { background: var(--line-strong); cursor: not-allowed; }
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--accent-strong) 72%, #6f1824);
+  filter: brightness(1.03);
+}
+.btn-danger:disabled { background: var(--line-strong); cursor: not-allowed; box-shadow: none; filter: none; }
 .btn-danger-outline {
-  background: transparent;
-  color: oklch(0.5 0.2 25);
-  border: 1px solid oklch(0.8 0.08 25);
+  background: var(--surface);
+  color: color-mix(in srgb, var(--accent-strong) 55%, #8b1e2d);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 18%, #d4a0a8);
   font-family: var(--font-sans);
   font-weight: 700;
   font-size: 14px;
   padding: 10px 16px;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: .15s;
 }
-.btn-danger-outline:hover:not(:disabled) { background: oklch(0.97 0.02 25); border-color: oklch(0.7 0.12 25); }
+.btn-danger-outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 6%, #fff);
+  border-color: color-mix(in srgb, var(--accent) 28%, #c07884);
+  color: color-mix(in srgb, var(--accent-strong) 45%, #6f1824);
+}
 .btn-danger-outline:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .pill {

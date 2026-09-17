@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GlassEffect } from '@/components/ui/liquid-glass';
+import { AppShell } from '../components/AppShell';
 import { JoinPanel, type JoinPanelMeta } from '../components/JoinPanel';
 import { ManagePanel, type ManagePanelMeta } from '../components/ManagePanel';
 import { clearToken } from '../lib/auth';
@@ -32,9 +32,9 @@ export function HubPage() {
   const manageBadge = manageMeta?.active ?? 0;
 
   return (
-    <div className="hub-shell">
+    <AppShell className="hub-shell">
       <div className="hub-page">
-        <GlassEffect tone="light" className="hub-top-shell rounded-[20px]">
+        <div className="hub-top-shell hub-surface rounded-[20px]">
           <header className="hub-top">
             <div className="hub-brand">
               <span className="hub-brand-name">MotrexEV</span>
@@ -70,10 +70,10 @@ export function HubPage() {
               로그아웃
             </button>
           </header>
-        </GlassEffect>
+        </div>
 
-        <GlassEffect tone="light" className="hub-intro rounded-[20px]">
-          <section className="hub-intro-inner" aria-labelledby="hub-intro-title">
+        <section className="hub-intro hub-surface rounded-[20px]" aria-labelledby="hub-intro-title">
+          <div className="hub-intro-inner">
             <div className="hub-intro-copy">
               {tab === 'join' ? (
                 <>
@@ -115,8 +115,8 @@ export function HubPage() {
                 ＋ 새 투표 만들기
               </button>
             )}
-          </section>
-        </GlassEffect>
+          </div>
+        </section>
 
         <div className="hub-body" key={tab}>
           {tab === 'join' ? (
@@ -130,6 +130,6 @@ export function HubPage() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

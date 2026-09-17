@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { checkVote, getPoll, submitFormResponse } from '../api/polls';
+import { AppShell } from '../components/AppShell';
 import { CountdownPill } from '../components/CountdownPill';
 import { SsoVerifyGate } from '../components/SsoVerifyGate';
 import { VoteVerifyGate } from '../components/VoteVerifyGate';
@@ -118,165 +119,183 @@ export function FormPage() {
     }
   };
 
-  if (loading) return <div className="vote-page"><p>불러오는 중…</p></div>;
-  if (error && !poll) return <div className="vote-page"><p className="login-error">{error}</p></div>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="vote-page"><p>불러오는 중…</p></div>
+      </AppShell>
+    );
+  }
+  if (error && !poll) {
+    return (
+      <AppShell>
+        <div className="vote-page"><p className="login-error">{error}</p></div>
+      </AppShell>
+    );
+  }
   if (!poll) return null;
   if (poll.status === 'closed') {
     return (
-      <div className="vote-page">
-        <p>이 폼은 종료되었습니다.</p>
-        <Link to={`/polls/${id}/results`}>결과 보기</Link>
-      </div>
+      <AppShell>
+        <div className="vote-page">
+          <p>이 폼은 종료되었습니다.</p>
+          <Link to={`/polls/${id}/results`}>결과 보기</Link>
+        </div>
+      </AppShell>
     );
   }
   if (needGate) {
     const gateKind = participateKindLabel(poll);
     return (
-      <div className="vote-page vote-page--gate">
-        <nav className="vote-gate-nav" aria-label="페이지 이동">
-          <Link to="/?tab=join" className="vote-back-link">← 목록</Link>
-          {poll.status === 'active' ? (
-            <span className="pill pill-live"><span className="dot" />진행중</span>
+      <AppShell>
+        <div className="vote-page vote-page--gate">
+          <nav className="vote-gate-nav" aria-label="페이지 이동">
+            <Link to="/?tab=join" className="vote-back-link">← 목록</Link>
+            {poll.status === 'active' ? (
+              <span className="pill pill-live"><span className="dot" />진행중</span>
+            ) : (
+              <span className="pill pill-closed">종료</span>
+            )}
+          </nav>
+          {isSso ? (
+            <SsoVerifyGate
+              pollId={id}
+              kindLabel={gateKind}
+              title={poll.title}
+              summary={participateSummary(poll)}
+              badges={participateBadges(poll)}
+              onVerified={(token, name) => void onVerified(token, name)}
+            />
           ) : (
-            <span className="pill pill-closed">종료</span>
+            <VoteVerifyGate
+              pollId={id}
+              kindLabel={gateKind}
+              title={poll.title}
+              summary={participateSummary(poll)}
+              badges={participateBadges(poll)}
+              verifyFields={parseVerifyFields(poll.verify_fields)}
+              onVerified={(token, name) => void onVerified(token, name)}
+            />
           )}
-        </nav>
-        {isSso ? (
-          <SsoVerifyGate
-            pollId={id}
-            kindLabel={gateKind}
-            title={poll.title}
-            summary={participateSummary(poll)}
-            badges={participateBadges(poll)}
-            onVerified={(token, name) => void onVerified(token, name)}
-          />
-        ) : (
-          <VoteVerifyGate
-            pollId={id}
-            kindLabel={gateKind}
-            title={poll.title}
-            summary={participateSummary(poll)}
-            badges={participateBadges(poll)}
-            verifyFields={parseVerifyFields(poll.verify_fields)}
-            onVerified={(token, name) => void onVerified(token, name)}
-          />
-        )}
-      </div>
+        </div>
+      </AppShell>
     );
   }
 
   const locked = submitted && !editable;
 
   return (
-    <div className="vote-page form-page">
-      <header className="vote-head">
-        <Link to="/?tab=join" className="vote-back">← 목록</Link>
-        <div>
-          <span className="eyebrow">Interview form</span>
-          <h1>{poll.title}</h1>
-          {pollIntroText(poll) && <p className="vote-intro">{pollIntroText(poll)}</p>}
-          {voterName && <p className="vote-voter">{voterName}님으로 제출합니다.</p>}
-        </div>
-        {poll.closes_at && <CountdownPill closesAt={poll.closes_at} />}
-      </header>
+    <AppShell>
+      <div className="vote-page form-page">
+        <header className="vote-head">
+          <Link to="/?tab=join" className="vote-back">← 목록</Link>
+          <div>
+            <span className="eyebrow">Interview form</span>
+            <h1>{poll.title}</h1>
+            {pollIntroText(poll) && <p className="vote-intro">{pollIntroText(poll)}</p>}
+            {voterName && <p className="vote-voter">{voterName}님으로 제출합니다.</p>}
+          </div>
+          {poll.closes_at && <CountdownPill closesAt={poll.closes_at} />}
+        </header>
 
-      <div className="form-questions">
-        {(poll.questions ?? []).map((q, i) => {
-          const ans = answers[q.id] ?? { question_id: q.id, option_ids: [] };
-          return (
-            <section className="form-q" key={q.id}>
-              <h2>
-                <span className="edit-cnum">{i + 1}</span>
-                {q.title}
-                {q.required ? <i>*</i> : <em>선택</em>}
-              </h2>
-              {q.help_text && <p className="cp-hint">{q.help_text}</p>}
-              {q.type === 'short_text' && (
-                <input
-                  className="cp-input"
-                  disabled={locked}
-                  value={ans.text_value ?? ''}
-                  onChange={(e) => patch(q.id, { text_value: e.target.value })}
-                />
-              )}
-              {q.type === 'long_text' && (
-                <textarea
-                  className="cp-input cp-area"
-                  rows={5}
-                  disabled={locked}
-                  value={ans.text_value ?? ''}
-                  onChange={(e) => patch(q.id, { text_value: e.target.value })}
-                />
-              )}
-              {q.type === 'scale' && (
-                <div className="form-scale">
-                  {Array.from({ length: q.scale_max - q.scale_min + 1 }, (_, n) => q.scale_min + n).map((n) => (
-                    <label key={n}>
-                      <input
-                        type="radio"
-                        name={`q-${q.id}`}
-                        disabled={locked}
-                        checked={ans.scale_value === n}
-                        onChange={() => patch(q.id, { scale_value: n })}
-                      />
-                      {n}
-                    </label>
-                  ))}
-                </div>
-              )}
-              {q.type === 'single_choice' && (
-                <div className="form-choices">
-                  {q.options.map((o) => (
-                    <label key={o.id}>
-                      <input
-                        type="radio"
-                        name={`q-${q.id}`}
-                        disabled={locked}
-                        checked={(ans.option_ids ?? [])[0] === o.id}
-                        onChange={() => patch(q.id, { option_ids: [o.id] })}
-                      />
-                      {o.label}
-                    </label>
-                  ))}
-                </div>
-              )}
-              {q.type === 'multi_choice' && (
-                <div className="form-choices">
-                  {q.options.map((o) => {
-                    const selected = (ans.option_ids ?? []).includes(o.id);
-                    return (
+        <div className="form-questions">
+          {(poll.questions ?? []).map((q, i) => {
+            const ans = answers[q.id] ?? { question_id: q.id, option_ids: [] };
+            return (
+              <section className="form-q" key={q.id}>
+                <h2>
+                  <span className="edit-cnum">{i + 1}</span>
+                  {q.title}
+                  {q.required ? <i>*</i> : <em>선택</em>}
+                </h2>
+                {q.help_text && <p className="cp-hint">{q.help_text}</p>}
+                {q.type === 'short_text' && (
+                  <input
+                    className="cp-input"
+                    disabled={locked}
+                    value={ans.text_value ?? ''}
+                    onChange={(e) => patch(q.id, { text_value: e.target.value })}
+                  />
+                )}
+                {q.type === 'long_text' && (
+                  <textarea
+                    className="cp-input cp-area"
+                    rows={5}
+                    disabled={locked}
+                    value={ans.text_value ?? ''}
+                    onChange={(e) => patch(q.id, { text_value: e.target.value })}
+                  />
+                )}
+                {q.type === 'scale' && (
+                  <div className="form-scale">
+                    {Array.from({ length: q.scale_max - q.scale_min + 1 }, (_, n) => q.scale_min + n).map((n) => (
+                      <label key={n}>
+                        <input
+                          type="radio"
+                          name={`q-${q.id}`}
+                          disabled={locked}
+                          checked={ans.scale_value === n}
+                          onChange={() => patch(q.id, { scale_value: n })}
+                        />
+                        {n}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {q.type === 'single_choice' && (
+                  <div className="form-choices">
+                    {q.options.map((o) => (
                       <label key={o.id}>
                         <input
-                          type="checkbox"
+                          type="radio"
+                          name={`q-${q.id}`}
                           disabled={locked}
-                          checked={selected}
-                          onChange={() => {
-                            const cur = ans.option_ids ?? [];
-                            patch(q.id, {
-                              option_ids: selected ? cur.filter((x) => x !== o.id) : [...cur, o.id],
-                            });
-                          }}
+                          checked={(ans.option_ids ?? [])[0] === o.id}
+                          onChange={() => patch(q.id, { option_ids: [o.id] })}
                         />
                         {o.label}
                       </label>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          );
-        })}
-      </div>
+                    ))}
+                  </div>
+                )}
+                {q.type === 'multi_choice' && (
+                  <div className="form-choices">
+                    {q.options.map((o) => {
+                      const selected = (ans.option_ids ?? []).includes(o.id);
+                      return (
+                        <label key={o.id}>
+                          <input
+                            type="checkbox"
+                            disabled={locked}
+                            checked={selected}
+                            onChange={() => {
+                              const cur = ans.option_ids ?? [];
+                              patch(q.id, {
+                                option_ids: selected ? cur.filter((x) => x !== o.id) : [...cur, o.id],
+                              });
+                            }}
+                          />
+                          {o.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
 
-      {error && <p className="login-error">{error}</p>}
-      <button
-        type="button"
-        className="btn btn-primary"
-        disabled={submitting || locked || poll.status !== 'active'}
-        onClick={() => void submit()}
-      >
-        {submitting ? '제출 중…' : submitted ? '다시 제출' : '제출하기'}
-      </button>
-    </div>
+        {error && <p className="login-error">{error}</p>}
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={submitting || locked || poll.status !== 'active'}
+          onClick={() => void submit()}
+        >
+          {submitting ? '제출 중…' : submitted ? '다시 제출' : '제출하기'}
+        </button>
+      </div>
+    </AppShell>
   );
 }

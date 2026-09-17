@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getPollPublic, getPublicFormResults, getPublicResults } from '../api/polls';
+import { AppShell } from '../components/AppShell';
 import { FormResultsView } from '../components/FormResultsView';
 import { ResultsRevealSection } from '../components/ResultsRevealSection';
 import { ApiError } from '../api/client';
@@ -70,19 +71,29 @@ export function PublicResultsPage() {
     },
   });
 
-  if (loading) return <div className="public-results-page">불러오는 중…</div>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="public-results-page">불러오는 중…</div>
+      </AppShell>
+    );
+  }
   if (error && !poll) {
     return (
-      <div className="public-results-page" style={{ padding: 48, textAlign: 'center' }}>
-        {error}
-      </div>
+      <AppShell>
+        <div className="public-results-page" style={{ padding: 48, textAlign: 'center' }}>
+          {error}
+        </div>
+      </AppShell>
     );
   }
   if (!poll) {
     return (
-      <div className="public-results-page" style={{ padding: 48, textAlign: 'center' }}>
-        투표를 찾을 수 없습니다.
-      </div>
+      <AppShell>
+        <div className="public-results-page" style={{ padding: 48, textAlign: 'center' }}>
+          투표를 찾을 수 없습니다.
+        </div>
+      </AppShell>
     );
   }
 
@@ -94,74 +105,76 @@ export function PublicResultsPage() {
     : null;
 
   return (
-    <div className="public-results-page">
-      <header className="public-results-hero">
-        <Link to="/?tab=join" className="vote-back-link">← 투표 목록</Link>
-        <span className="eyebrow">Vote Results · Poll #{poll.id}</span>
-        <h1 className="public-results-title">{poll.title}</h1>
-        {intro && <p className="public-results-intro">{intro}</p>}
-        <div className="public-results-meta">
-          <span className={`pill ${active ? 'pill-live' : closed ? 'pill-closed' : ''}`}>
-            {active && <span className="dot" />}
-            {active ? '투표 진행중' : closed ? '투표 종료' : '준비중'}
-          </span>
-          {poll.closes_at && (
-            <span className="public-results-closes">
-              마감 {new Date(poll.closes_at).toLocaleString('ko-KR')}
+    <AppShell>
+      <div className="public-results-page">
+        <header className="public-results-hero">
+          <Link to="/?tab=join" className="vote-back-link">← 투표 목록</Link>
+          <span className="eyebrow">Vote Results · Poll #{poll.id}</span>
+          <h1 className="public-results-title">{poll.title}</h1>
+          {intro && <p className="public-results-intro">{intro}</p>}
+          <div className="public-results-meta">
+            <span className={`pill ${active ? 'pill-live' : closed ? 'pill-closed' : ''}`}>
+              {active && <span className="dot" />}
+              {active ? '투표 진행중' : closed ? '투표 종료' : '준비중'}
             </span>
+            {poll.closes_at && (
+              <span className="public-results-closes">
+                마감 {new Date(poll.closes_at).toLocaleString('ko-KR')}
+              </span>
+            )}
+          </div>
+          {active && (
+            <Link to={`/polls/${id}`} className="public-results-vote-link">
+              투표하러 가기 →
+            </Link>
           )}
-        </div>
-        {active && (
-          <Link to={`/polls/${id}`} className="public-results-vote-link">
-            투표하러 가기 →
-          </Link>
+        </header>
+
+        {error && <p className="public-results-error">{error}</p>}
+
+        {poll.kind === 'form' && formResults && closed && (
+          <FormResultsView results={formResults} showIndividual={false} />
         )}
-      </header>
 
-      {error && <p className="public-results-error">{error}</p>}
-
-      {poll.kind === 'form' && formResults && closed && (
-        <FormResultsView results={formResults} showIndividual={false} />
-      )}
-
-      {poll.kind !== 'form' && results && revealed && (
-        <div className="admin-stats admin-stats--public">
-          <div className="stat-card">
-            <div className="stat-card-label">
-              <span className="stat-k">총 투표 수</span>
-              <span className="stat-sub">유효 표</span>
+        {poll.kind !== 'form' && results && revealed && (
+          <div className="admin-stats admin-stats--public">
+            <div className="stat-card">
+              <div className="stat-card-label">
+                <span className="stat-k">총 투표 수</span>
+                <span className="stat-sub">유효 표</span>
+              </div>
+              <div className="stat-v">{results.total_ballots.toLocaleString()}</div>
             </div>
-            <div className="stat-v">{results.total_ballots.toLocaleString()}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-label">
-              <span className="stat-k">참여율</span>
-              <span className="stat-sub">{results.total_ballots} / {results.eligible_count}명</span>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                <span className="stat-k">참여율</span>
+                <span className="stat-sub">{results.total_ballots} / {results.eligible_count}명</span>
+              </div>
+              <div className="stat-v">{participation}%</div>
             </div>
-            <div className="stat-v">{participation}%</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card-label">
-              <span className="stat-k">후보 수</span>
-              <span className="stat-sub">공모 후보</span>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                <span className="stat-k">후보 수</span>
+                <span className="stat-sub">공모 후보</span>
+              </div>
+              <div className="stat-v">{poll.candidates.length}</div>
             </div>
-            <div className="stat-v">{poll.candidates.length}</div>
           </div>
-        </div>
-      )}
+        )}
 
-      {poll.kind !== 'form' && (
-      <ResultsRevealSection
-        pollId={id}
-        poll={poll}
-        results={results}
-        canReveal={closed}
-        loadingResults={loadingResults}
-        onRevealRequest={loadResults}
-        onRevealed={() => setRevealed(true)}
-        storageKey={revealKey(id)}
-      />
-      )}
-    </div>
+        {poll.kind !== 'form' && (
+        <ResultsRevealSection
+          pollId={id}
+          poll={poll}
+          results={results}
+          canReveal={closed}
+          loadingResults={loadingResults}
+          onRevealRequest={loadResults}
+          onRevealed={() => setRevealed(true)}
+          storageKey={revealKey(id)}
+        />
+        )}
+      </div>
+    </AppShell>
   );
 }

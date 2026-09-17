@@ -1,21 +1,8 @@
-/* ---------- hub shell — 흰 배경 + 은은한 컬러(글래스 뒤로 비침) ---------- */
+/* ---------- hub shell — uses shared AppShell backdrop ---------- */
 .hub-shell {
+  /* kept as alias class when nested; AppShell owns canvas */
   position: relative;
   min-height: 100vh;
-  background: #fff;
-  isolation: isolate;
-}
-
-.hub-shell::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(720px 480px at 12% 18%, color-mix(in srgb, var(--accent) 7%, #fff), transparent 68%),
-    radial-gradient(640px 420px at 88% 72%, color-mix(in srgb, var(--accent) 5%, #fff), transparent 64%),
-    radial-gradient(480px 320px at 62% 6%, #f5f8fc, transparent 62%);
 }
 
 .hub-page {
@@ -31,6 +18,12 @@
   top: 14px;
   z-index: 20;
   margin-bottom: 20px;
+}
+
+.hub-surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
 }
 
 .hub-top {
@@ -204,16 +197,9 @@
 
 .hub-body {
   min-width: 0;
-  animation: hub-panel-in 0.28s ease both;
-}
-
-@keyframes hub-panel-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  width: 100%;
+  display: block;
+  opacity: 1;
 }
 
 /* ---------- shared empty / loading ---------- */
@@ -263,7 +249,7 @@
 
 .hub-skeleton-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 16px;
 }
 
@@ -327,16 +313,29 @@
 @media (max-width: 720px) {
   .hub-page {
     padding-inline: 16px;
+    padding-bottom: 96px;
+  }
+
+  .hub-top-shell {
+    position: static;
+    top: auto;
+    margin-bottom: 16px;
   }
 
   .hub-top {
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
+    gap: 12px;
+    padding: 12px 14px;
   }
 
   .hub-brand {
     grid-column: 1;
     grid-row: 1;
+  }
+
+  .hub-brand-name {
+    font-size: 18px;
   }
 
   .hub-logout {
@@ -348,6 +347,9 @@
     grid-column: 1 / -1;
     grid-row: 2;
     max-width: none;
+    background: var(--bg-2);
+    border-color: var(--line);
+    backdrop-filter: none;
   }
 
   .hub-tab-hint {
@@ -357,7 +359,11 @@
   .hub-intro-inner {
     flex-direction: column;
     align-items: stretch;
-    padding: 18px 18px;
+    padding: 16px;
+  }
+
+  .hub-title {
+    font-size: clamp(22px, 7vw, 28px);
   }
 
   .hub-intro-action {
@@ -367,13 +373,31 @@
   .hub-skeleton-grid {
     grid-template-columns: 1fr;
   }
+
+  .home-poll-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* solid surfaces on mobile — avoid stacked glass bleed */
+  .glass-tone-light .glass-layer-blur {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .glass-tone-light .glass-layer-fill {
+    background: var(--surface) !important;
+  }
+  .hub-top-shell,
+  .hub-intro,
+  .manage-table-glass,
+  .manage-stats-glass,
+  .home-poll-glass,
+  .home-section-head-glass {
+    box-shadow: var(--shadow-sm) !important;
+    border: 1px solid var(--line) !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hub-body {
-    animation: none;
-  }
-
   .hub-skeleton-card,
   .hub-skeleton-row {
     animation: none;

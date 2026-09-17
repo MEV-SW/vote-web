@@ -12,6 +12,7 @@ import {
   updatePoll,
   uploadImage,
 } from '../../api/admin';
+import { AppShell } from '../../components/AppShell';
 import { ArtworkLightbox } from '../../components/ArtworkLightbox';
 import { Placeholder } from '../../components/Placeholder';
 import { PtBtn } from '../../components/PtBtn';
@@ -238,7 +239,11 @@ export function EditPollPage() {
   };
 
   if (!poll) {
-    return <div className="manage-page edit-page text-muted-foreground">불러오는 중…</div>;
+    return (
+      <AppShell>
+        <div className="manage-page edit-page text-muted-foreground">불러오는 중…</div>
+      </AppShell>
+    );
   }
 
   const statusCls = poll.status === 'active' ? 'st-active' : poll.status === 'draft' ? 'st-draft' : 'st-closed';
@@ -248,6 +253,7 @@ export function EditPollPage() {
   const isForm = poll.kind === 'form';
 
   return (
+    <AppShell>
     <div className="manage-page edit-page">
       <header className="manage-hero edit-hero">
         <nav className="admin-top-nav" aria-label="페이지 이동">
@@ -611,5 +617,6 @@ export function EditPollPage() {
         />
       )}
     </div>
+    </AppShell>
   );
 }

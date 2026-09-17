@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getPollAdmin, getResults, getResultsCsvUrl, getFormResults, getFormResultsCsvUrl, resetPollVotes, updatePoll } from '../../api/admin';
+import { AppShell } from '../../components/AppShell';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FormResultsView } from '../../components/FormResultsView';
 import { Medal } from '../../components/Medal';
@@ -72,7 +73,13 @@ export function ResultsPage() {
     }
   };
 
-  if (!poll || (poll.kind === 'form' ? !formResults : !results)) return <div className="admin-page">불러오는 중…</div>;
+  if (!poll || (poll.kind === 'form' ? !formResults : !results)) {
+    return (
+      <AppShell>
+        <div className="admin-page">불러오는 중…</div>
+      </AppShell>
+    );
+  }
 
   if (poll.kind === 'form' && formResults) {
     const downloadCsv = async () => {
@@ -85,37 +92,45 @@ export function ResultsPage() {
       URL.revokeObjectURL(a.href);
     };
     return (
-      <div className="admin-page">
-        <header className="admin-hero">
-          <nav className="admin-top-nav" aria-label="페이지 이동">
-            <Link to="/?tab=manage" className="eyebrow admin-top-nav-link">← 관리</Link>
-          </nav>
-          <div className="admin-toolbar">
-            <h1 className="admin-title">{poll.title}</h1>
-            <div className="admin-toolbar-actions">
-              <Link to={`/polls/${id}/results`} className="btn btn-ghost btn-sm">공개 결과</Link>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => void downloadCsv()}>CSV</button>
-              <button type="button" className="btn btn-danger-outline btn-sm" onClick={() => setShowReset(true)}>리셋</button>
+      <AppShell>
+        <div className="admin-page">
+          <header className="admin-hero">
+            <nav className="admin-top-nav" aria-label="페이지 이동">
+              <Link to="/?tab=manage" className="eyebrow admin-top-nav-link">← 관리</Link>
+            </nav>
+            <div className="admin-toolbar">
+              <h1 className="admin-title">{poll.title}</h1>
+              <div className="admin-toolbar-actions">
+                <Link to={`/polls/${id}/results`} className="btn btn-ghost btn-sm">공개 결과</Link>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => void downloadCsv()}>CSV</button>
+                <button type="button" className="btn btn-danger-outline btn-sm" onClick={() => setShowReset(true)}>리셋</button>
+              </div>
             </div>
-          </div>
-        </header>
-        {showReset && (
-          <ConfirmDialog
-            title="응답을 리셋할까요?"
-            message={`「${poll.title}」의 응답 ${formResults.total_responses.toLocaleString()}건이 삭제됩니다.`}
-            confirmLabel="예, 리셋"
-            cancelLabel="아니오"
-            danger
-            onConfirm={doReset}
-            onCancel={() => setShowReset(false)}
-          />
-        )}
-        <FormResultsView results={formResults} showIndividual />
-      </div>
+          </header>
+          {showReset && (
+            <ConfirmDialog
+              title="응답을 리셋할까요?"
+              message={`「${poll.title}」의 응답 ${formResults.total_responses.toLocaleString()}건이 삭제됩니다.`}
+              confirmLabel="예, 리셋"
+              cancelLabel="아니오"
+              danger
+              onConfirm={doReset}
+              onCancel={() => setShowReset(false)}
+            />
+          )}
+          <FormResultsView results={formResults} showIndividual />
+        </div>
+      </AppShell>
     );
   }
 
-  if (!results) return <div className="admin-page">불러오는 중…</div>;
+  if (!results) {
+    return (
+      <AppShell>
+        <div className="admin-page">불러오는 중…</div>
+      </AppShell>
+    );
+  }
 
   const rows = results.rows;
   const maxSel = poll.max_selections ?? 3;
@@ -150,6 +165,7 @@ export function ResultsPage() {
   };
 
   return (
+    <AppShell>
     <div className="admin-page">
       <header className="admin-hero">
         <nav className="admin-top-nav" aria-label="페이지 이동">
@@ -287,5 +303,6 @@ export function ResultsPage() {
         </div>
       </div>
     </div>
+    </AppShell>
   );
 }

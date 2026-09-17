@@ -46,7 +46,7 @@ const GLASS_TONE: Record<
     shadow:
       '0 8px 32px rgba(15, 23, 42, 0.07), 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 0 0 1px rgba(255, 255, 255, 0.5)',
     blur: 'blur(20px) saturate(1.35)',
-    fill: 'rgba(255, 255, 255, 0.55)',
+    fill: 'rgba(255, 255, 255, 0.82)',
     inset: 'inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(255, 255, 255, 0.35)',
     border: '1px solid rgba(255, 255, 255, 0.75)',
     distortion: false,
@@ -84,7 +84,7 @@ export const GlassEffect: React.FC<GlassEffectProps> = ({
   const content = (
     <div
       className={cn(
-        'relative flex overflow-hidden text-[var(--ink,#111)] transition-all duration-700',
+        'relative flex w-full flex-col overflow-hidden text-[var(--ink,#111)] transition-all duration-700',
         tone === 'light' && 'glass-tone-light',
         (href || onClick) && 'cursor-pointer',
         className,
@@ -105,7 +105,7 @@ export const GlassEffect: React.FC<GlassEffectProps> = ({
       }
     >
       <div
-        className="absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
+        className="glass-layer-blur absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
         style={{
           backdropFilter: preset.blur,
           WebkitBackdropFilter: preset.blur,
@@ -114,11 +114,11 @@ export const GlassEffect: React.FC<GlassEffectProps> = ({
         }}
       />
       <div
-        className="absolute inset-0 z-10 rounded-[inherit]"
+        className="glass-layer-fill absolute inset-0 z-10 rounded-[inherit]"
         style={{ background: preset.fill }}
       />
       <div
-        className="absolute inset-0 z-20 overflow-hidden rounded-[inherit] pointer-events-none"
+        className="glass-layer-inset absolute inset-0 z-20 overflow-hidden rounded-[inherit] pointer-events-none"
         style={{ boxShadow: preset.inset }}
       />
       <div className="relative z-30 w-full">{children}</div>

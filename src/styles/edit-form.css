@@ -4,7 +4,7 @@
   max-width: 960px;
   padding-top: 28px;
   padding-bottom: 96px;
-  background: var(--background);
+  background: transparent;
 }
 
 .edit-page .edit-hero {
@@ -498,6 +498,22 @@
 }
 
 @media (max-width: 560px) {
+  .cp-backdrop {
+    padding: 12px;
+    align-items: flex-end;
+  }
+  .cp-modal,
+  .cp-modal--settings {
+    width: 100%;
+    max-height: min(92dvh, 100%);
+    border-radius: 18px 18px 12px 12px;
+  }
+  .cp-head {
+    padding: 18px 16px 10px;
+  }
+  .cp-body {
+    padding-inline: 16px;
+  }
   .cp-kind-grid {
     grid-template-columns: 1fr;
   }

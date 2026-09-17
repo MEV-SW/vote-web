@@ -3,6 +3,7 @@ import { GlassFilter } from '@/components/ui/liquid-glass';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { AuthGuard } from './pages/AuthGuard';
 import { CompletePage } from './pages/CompletePage';
+import { DotPatternDemoPage } from './pages/DotPatternDemoPage';
 import { HubPage } from './pages/HubPage';
 import { PublicResultsPage } from './pages/PublicResultsPage';
 import { VotePage } from './pages/VotePage';
@@ -20,6 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/demo/liquid-glass" element={<LiquidGlassDemoPage />} />
           <Route path="/demo/form-layout" element={<FormLayoutDemoPage />} />
+          <Route path="/demo/dot-pattern" element={<DotPatternDemoPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/admin/login" element={<Navigate to="/login" replace />} />

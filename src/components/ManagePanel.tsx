@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GlassEffect } from '@/components/ui/liquid-glass';
 import { createPoll, deletePoll, listPolls, updatePoll } from '../api/admin';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ResultsModeDialog } from './ResultsModeDialog';
@@ -9,6 +8,7 @@ import { QrCodeModal } from './QrCodeModal';
 import { PtBtn } from './PtBtn';
 import { QrOpenButton } from './QrOpenButton';
 import { getToken, clearToken } from '../lib/auth';
+import { useMediaQuery } from '../lib/useMediaQuery';
 import type { PollListItem } from '../types/api';
 import { ApiError } from '../api/client';
 import { hasSelectionMismatch, selectionMismatchMessage } from '../lib/pollWarnings';
@@ -62,6 +62,7 @@ interface ManagePanelProps {
 export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: ManagePanelProps) {
   const navigate = useNavigate();
   const token = getToken()!;
+  const isDesktop = useMediaQuery('(min-width: 861px)');
   const [polls, setPolls] = useState<PollListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [creatingInternal, setCreatingInternal] = useState(false);
@@ -135,7 +136,7 @@ export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: Ma
       {error && <p className="manage-panel-error">{error}</p>}
 
       {!loading && polls.length > 0 && (
-        <GlassEffect tone="light" className="manage-stats-glass rounded-[20px]">
+        <div className="manage-stats-glass hub-surface rounded-[20px]">
           <div className="manage-stats manage-stats--glass">
             <div className="mstat">
               <div className="mstat-v">{polls.length}</div>
@@ -154,13 +155,13 @@ export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: Ma
               <div className="mstat-k">준비중</div>
             </div>
           </div>
-        </GlassEffect>
+        </div>
       )}
 
       {loading && <ManageSkeleton />}
 
       {!loading && polls.length === 0 && (
-        <GlassEffect tone="light" className="rounded-[20px]">
+        <div className="hub-surface rounded-[20px]">
           <div className="hub-empty hub-empty--glass">
             <div className="hub-empty-icon" aria-hidden>
               ✦
@@ -171,129 +172,187 @@ export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: Ma
               ＋ 새 투표 만들기
             </button>
           </div>
-        </GlassEffect>
+        </div>
       )}
 
-      {!loading && polls.length > 0 && (
-      <GlassEffect tone="light" className="manage-table-glass rounded-[20px]">
-      <div className="poll-table-wrap poll-table-wrap--glass">
-        <table className="poll-table">
-          <colgroup>
-            <col className="pt-col pt-col--poll" />
-            <col className="pt-col pt-col--type" />
-            <col className="pt-col pt-col--status" />
-            <col className="pt-col pt-col--cand" />
-            <col className="pt-col pt-col--part" />
-            <col className="pt-col pt-col--qr" />
-            <col className="pt-col pt-col--actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>투표</th>
-              <th>타입</th>
-              <th>상태</th>
-              <th>후보</th>
-              <th>참여</th>
-              <th>QR</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {polls.map((p) => {
-              const sm = STATUS_META[p.status] ?? STATUS_META.draft;
-              const rate = p.ballots ? Math.round((p.ballots / p.eligible) * 100) : 0;
-              const created = new Date(p.created_at).toLocaleDateString('ko-KR');
-              const closes = p.closes_at ? new Date(p.closes_at).toLocaleDateString('ko-KR') : '미정';
-              const maxSel = p.max_selections ?? 3;
-              const selectionWarn = p.kind !== 'form' && hasSelectionMismatch(p.candidates, maxSel);
-              return (
-                <tr key={p.id} className={p.status === 'closed' ? 'is-closed' : undefined}>
-                  <td data-label="투표">
-                    <div className="pt-poll-inner">
-                      <div className="pt-cat" data-cat={p.category}>
-                        {p.category}
-                      </div>
-                      <div className="pt-titles">
-                        <Link to={`/polls/${p.id}/results`} className="pt-title pt-title-link">
-                          {p.title}
-                        </Link>
-                        <div className="pt-meta">
-                          #{p.id} · {p.kind === 'form' ? '폼' : '투표'} · 생성 {created} · 마감 {closes}
-                        </div>
-                        {selectionWarn && (
-                          <div className="pt-warn" title={selectionMismatchMessage(p.candidates, maxSel)}>
-                            ⚠ 선택 {maxSel}명 · 후보 {p.candidates}명
+      {!loading && polls.length > 0 && isDesktop && (
+        <div className="manage-desktop-table">
+          <div className="manage-table-glass hub-surface rounded-[20px] w-full">
+            <div className="poll-table-wrap poll-table-wrap--glass">
+              <table className="poll-table">
+                <colgroup>
+                  <col className="pt-col pt-col--poll" />
+                  <col className="pt-col pt-col--type" />
+                  <col className="pt-col pt-col--status" />
+                  <col className="pt-col pt-col--cand" />
+                  <col className="pt-col pt-col--part" />
+                  <col className="pt-col pt-col--qr" />
+                  <col className="pt-col pt-col--actions" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>투표</th>
+                    <th>타입</th>
+                    <th>상태</th>
+                    <th>후보</th>
+                    <th>참여</th>
+                    <th>QR</th>
+                    <th>관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {polls.map((p) => {
+                    const sm = STATUS_META[p.status] ?? STATUS_META.draft;
+                    const rate = p.ballots ? Math.round((p.ballots / Math.max(p.eligible, 1)) * 100) : 0;
+                    const created = new Date(p.created_at).toLocaleDateString('ko-KR');
+                    const closes = p.closes_at ? new Date(p.closes_at).toLocaleDateString('ko-KR') : '미정';
+                    const maxSel = p.max_selections ?? 3;
+                    const selectionWarn = p.kind !== 'form' && hasSelectionMismatch(p.candidates, maxSel);
+                    const a = statusAction(p.status);
+                    return (
+                      <tr key={p.id} className={p.status === 'closed' ? 'is-closed' : undefined}>
+                        <td>
+                          <div className="pt-poll-inner">
+                            <div className="pt-cat" data-cat={p.category}>{p.category}</div>
+                            <div className="pt-titles">
+                              <Link to={`/polls/${p.id}/results`} className="pt-title pt-title-link">
+                                {p.title}
+                              </Link>
+                              <div className="pt-meta">
+                                #{p.id} · {p.kind === 'form' ? '폼' : '투표'} · 생성 {created} · 마감 {closes}
+                              </div>
+                              {selectionWarn && (
+                                <div className="pt-warn" title={selectionMismatchMessage(p.candidates, maxSel)}>
+                                  ⚠ 선택 {maxSel}명 · 후보 {p.candidates}명
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td data-label="타입">
+                        </td>
+                        <td>
+                          <span className={`pill pt-type-pill pt-type--${p.poll_type || 'open'}`}>
+                            {POLL_TYPE_LABEL[p.poll_type] ?? '불특정'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`pill st-pill ${sm.cls}`}>
+                            {sm.dot && <span className="dot" />}
+                            {sm.label}
+                          </span>
+                        </td>
+                        <td>
+                          <b>{p.kind === 'form' ? (p.questions ?? 0) : p.candidates}</b>
+                          <span>{p.kind === 'form' ? '문항' : '명'}</span>
+                        </td>
+                        <td>
+                          <div className="pt-part-inner">
+                            <div>
+                              <b>{p.ballots.toLocaleString()}</b>
+                              <span>표 · {rate}%</span>
+                            </div>
+                            <div className="pt-bar">
+                              <i style={{ width: `${rate}%` }} />
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <QrOpenButton onClick={() => setQrPoll({ id: p.id, title: p.title })} />
+                        </td>
+                        <td>
+                          <div className="pt-actions-inner">
+                            <PtBtn variant={a.variant} icon={a.icon} label={a.label} onClick={() => void cycle(p.id, p.status)} />
+                            <PtBtn variant="ghost" icon="📊" label="결과" onClick={() => setResultsPick({ id: p.id, title: p.title })} />
+                            <PtBtn variant="ghost" icon="✎" label="수정" to={`/admin/polls/${p.id}/edit`} />
+                            <PtBtn
+                              variant="delete"
+                              icon="🗑"
+                              label="삭제"
+                              title="투표 삭제"
+                              disabled={deleting}
+                              onClick={() => setDeleteTarget(p)}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!loading && polls.length > 0 && !isDesktop && (
+        <div className="manage-mobile-cards">
+          {polls.map((p) => {
+            const sm = STATUS_META[p.status] ?? STATUS_META.draft;
+            const rate = p.ballots ? Math.round((p.ballots / Math.max(p.eligible, 1)) * 100) : 0;
+            const created = new Date(p.created_at).toLocaleDateString('ko-KR');
+            const closes = p.closes_at ? new Date(p.closes_at).toLocaleDateString('ko-KR') : '미정';
+            const a = statusAction(p.status);
+            return (
+              <article
+                key={p.id}
+                className={`manage-card${p.status === 'closed' ? ' is-closed' : ''}`}
+              >
+                <header className="manage-card-head">
+                  <div className="manage-card-tags">
+                    <span className="pt-cat" data-cat={p.category}>{p.category}</span>
                     <span className={`pill pt-type-pill pt-type--${p.poll_type || 'open'}`}>
                       {POLL_TYPE_LABEL[p.poll_type] ?? '불특정'}
                     </span>
-                  </td>
-                  <td data-label="상태">
                     <span className={`pill st-pill ${sm.cls}`}>
                       {sm.dot && <span className="dot" />}
                       {sm.label}
                     </span>
-                  </td>
-                  <td data-label="후보">
-                    <b>{p.kind === 'form' ? (p.questions ?? 0) : p.candidates}</b>
-                    <span>{p.kind === 'form' ? '문항' : '명'}</span>
-                  </td>
-                  <td data-label="참여">
-                    <div className="pt-part-inner">
-                      <div>
-                        <b>{p.ballots.toLocaleString()}</b>
-                        <span>표 · {rate}%</span>
-                      </div>
-                      <div className="pt-bar">
-                        <i style={{ width: `${rate}%` }} />
-                      </div>
+                  </div>
+                  <h3 className="manage-card-title">
+                    <Link to={`/polls/${p.id}/results`}>{p.title}</Link>
+                  </h3>
+                  <p className="manage-card-meta">
+                    #{p.id} · {p.kind === 'form' ? '폼' : '투표'} · 생성 {created} · 마감 {closes}
+                  </p>
+                </header>
+
+                <div className="manage-card-stats">
+                  <div>
+                    <span className="manage-card-stat-k">{p.kind === 'form' ? '문항' : '후보'}</span>
+                    <strong>
+                      {p.kind === 'form' ? (p.questions ?? 0) : p.candidates}
+                      <em>{p.kind === 'form' ? '개' : '명'}</em>
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="manage-card-stat-k">참여</span>
+                    <strong>
+                      {p.ballots.toLocaleString()}
+                      <em>표 · {rate}%</em>
+                    </strong>
+                    <div className="pt-bar manage-card-bar">
+                      <i style={{ width: `${rate}%` }} />
                     </div>
-                  </td>
-                  <td data-label="QR">
-                    <QrOpenButton onClick={() => setQrPoll({ id: p.id, title: p.title })} />
-                  </td>
-                  <td data-label="관리">
-                    <div className="pt-actions-inner">
-                      {(() => {
-                        const a = statusAction(p.status);
-                        return (
-                          <PtBtn
-                            variant={a.variant}
-                            icon={a.icon}
-                            label={a.label}
-                            onClick={() => void cycle(p.id, p.status)}
-                          />
-                        );
-                      })()}
-                      <PtBtn
-                        variant="ghost"
-                        icon="📊"
-                        label="결과"
-                        onClick={() => setResultsPick({ id: p.id, title: p.title })}
-                      />
-                      <PtBtn variant="ghost" icon="✎" label="수정" to={`/admin/polls/${p.id}/edit`} />
-                      <PtBtn
-                        variant="delete"
-                        icon="🗑"
-                        label="삭제"
-                        title="투표 삭제"
-                        disabled={deleting}
-                        onClick={() => setDeleteTarget(p)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      </GlassEffect>
+                  </div>
+                </div>
+
+                <div className="manage-card-actions">
+                  <QrOpenButton onClick={() => setQrPoll({ id: p.id, title: p.title })} />
+                  <PtBtn variant={a.variant} icon={a.icon} label={a.label} onClick={() => void cycle(p.id, p.status)} />
+                  <PtBtn variant="ghost" icon="📊" label="결과" onClick={() => setResultsPick({ id: p.id, title: p.title })} />
+                  <PtBtn variant="ghost" icon="✎" label="수정" to={`/admin/polls/${p.id}/edit`} />
+                  <PtBtn
+                    variant="delete"
+                    icon="🗑"
+                    label="삭제"
+                    title="투표 삭제"
+                    disabled={deleting}
+                    onClick={() => setDeleteTarget(p)}
+                  />
+                </div>
+              </article>
+            );
+          })}
+        </div>
       )}
 
       {deleteTarget && (
@@ -324,29 +383,24 @@ export function ManagePanel({ createOpen, onCreateOpenChange, onMetaUpdate }: Ma
         <CreatePollModal
           onClose={() => setCreating(false)}
           onCreate={async (draft) => {
-            try {
-              const created = await createPoll(token, {
-                title: draft.title,
-                category: draft.category,
-                description: draft.desc || undefined,
-                closes_at: draft.closes_at ? `${draft.closes_at}T18:00:00` : undefined,
-                max_selections: draft.max_selections,
-                poll_type: draft.poll_type,
-                verify_fields:
-                  draft.poll_type === 'restricted' && draft.verify_method === 'pin'
-                    ? draft.verify_fields
-                    : undefined,
-                kind: draft.kind,
-                identity_mode: draft.identity_mode,
-                verify_method: draft.verify_method,
-                candidates: draft.candidates,
-              });
-              setCreating(false);
-              await load();
-              navigate(`/admin/polls/${created.id}/edit`);
-            } catch {
-              setError(draft.kind === 'form' ? '폼 생성에 실패했습니다.' : '투표 생성에 실패했습니다.');
-            }
+            const created = await createPoll(token, {
+              title: draft.title,
+              category: draft.category,
+              description: draft.desc || undefined,
+              closes_at: draft.closes_at ? `${draft.closes_at}T18:00:00` : undefined,
+              max_selections: draft.max_selections,
+              poll_type: draft.poll_type,
+              verify_fields:
+                draft.poll_type === 'restricted' && draft.verify_method === 'pin'
+                  ? draft.verify_fields
+                  : undefined,
+              kind: draft.kind,
+              identity_mode: draft.identity_mode,
+              verify_method: draft.verify_method,
+              candidates: draft.candidates,
+            });
+            setCreating(false);
+            navigate(`/admin/polls/${created.id}/edit`);
           }}
         />
       )}

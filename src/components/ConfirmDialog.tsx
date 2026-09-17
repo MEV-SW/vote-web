@@ -40,7 +40,9 @@ export function ConfirmDialog({
         <p id="confirm-msg" className="confirm-msg">{message}</p>
         <div className="confirm-actions">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>{cancelLabel}</button>
-          <button type="button" className={`btn${danger ? ' btn-danger' : ' btn-primary'}`} onClick={onConfirm}>{confirmLabel}</button>
+          <button type="button" className={`btn${danger ? ' btn-danger' : ' btn-primary'}`} onClick={onConfirm}>
+            {confirmLabel}
+          </button>
         </div>
       </div>
     </div>
