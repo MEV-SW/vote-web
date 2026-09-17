@@ -1,15 +1,59 @@
-import { useState } from 'react';
-import { startSsoLogin } from '../lib/oidc';
+import { useEffect, useRef, useState } from 'react';
+import { verifySso } from '../api/polls';
 import { ApiError } from '../api/client';
+import { getToken } from '../lib/auth';
+import { startSsoLogin } from '../lib/oidc';
+import type { VerifyVoterResponse } from '../types/api';
 
 interface SsoVerifyGateProps {
   pollId: number;
   kindLabel?: string;
+  onVerified: (token: string, name: string, ballotToken?: string | null) => void;
 }
 
-export function SsoVerifyGate({ pollId, kindLabel = '참여' }: SsoVerifyGateProps) {
+export function SsoVerifyGate({ pollId, kindLabel = '참여', onVerified }: SsoVerifyGateProps) {
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => Boolean(getToken()));
+  const applied = useRef(false);
+
+  const applyResult = (res: VerifyVoterResponse) => {
+    if (applied.current) return;
+    applied.current = true;
+    if (res.ballot_token) {
+      onVerified(res.voter_token ?? '', res.voter_name, res.ballot_token);
+      return;
+    }
+    if (res.voter_token) {
+      onVerified(res.voter_token, res.voter_name);
+      return;
+    }
+    onVerified('', res.voter_name, null);
+  };
+
+  useEffect(() => {
+    const session = getToken();
+    if (!session) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await verifySso(pollId, session);
+        if (!cancelled) applyResult(res);
+      } catch (err) {
+        if (!cancelled) {
+          setLoading(false);
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : '세션으로 확인할 수 없습니다. 회사 계정으로 계속해 주세요.',
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot session reuse
+  }, [pollId]);
 
   const onLogin = async () => {
     setLoading(true);
@@ -21,6 +65,16 @@ export function SsoVerifyGate({ pollId, kindLabel = '참여' }: SsoVerifyGatePro
       setLoading(false);
     }
   };
+
+  if (loading && getToken() && !error) {
+    return (
+      <div className="verify-gate">
+        <span className="eyebrow">Company SSO</span>
+        <h2>회사 계정 확인 중…</h2>
+        <p className="verify-sub">이미 로그인된 세션으로 자격을 확인하고 있습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="verify-gate">

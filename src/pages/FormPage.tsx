@@ -80,7 +80,7 @@ export function FormPage() {
     return () => { cancelled = true; };
   }, [id, applyCheck]);
 
-  const onVerified = async (token: string, name: string) => {
+  const onVerified = async (token: string, name: string, _ballot?: string | null) => {
     setVoterSession(id, token, name);
     setVoterToken(token);
     setVoterName(name);
@@ -128,7 +128,7 @@ export function FormPage() {
     return (
       <div className="vote-page">
         {isSso
-          ? <SsoVerifyGate pollId={id} kindLabel="폼 제출" />
+          ? <SsoVerifyGate pollId={id} kindLabel="폼 제출" onVerified={(token, name) => void onVerified(token, name)} />
           : (
             <VoteVerifyGate
               pollId={id}

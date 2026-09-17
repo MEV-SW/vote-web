@@ -267,7 +267,7 @@ export function VotePage() {
 
       {isRestricted && !canVote && (
         isSso
-          ? <SsoVerifyGate pollId={id} kindLabel={isSecret ? '무기명 투표' : '투표'} />
+          ? <SsoVerifyGate pollId={id} kindLabel={isSecret ? '무기명 투표' : '투표'} onVerified={onVerified} />
           : <VoteVerifyGate pollId={id} verifyFields={verifyFields} onVerified={onVerified} />
       )}
 
